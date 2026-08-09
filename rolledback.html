@@ -323,7 +323,12 @@
   #book img{transform:scaleX(-1);width:100%;height:100%;display:block}
   .page{
     background:#fff;overflow:hidden;box-shadow:0 0 20px rgba(0,0,0,.2);position:relative;
-    opacity:1!important;isolation:isolate;
+    opacity:1!important;isolation:isolate;transform-style:preserve-3d;
+    backface-visibility:hidden;-webkit-backface-visibility:hidden;
+  }
+  .page::before{
+    content:'';position:absolute;inset:0;background:#fff;pointer-events:none;
+    transform:rotateY(180deg) translateZ(.1px);
     backface-visibility:hidden;-webkit-backface-visibility:hidden;
   }
   #book .stf__item,
@@ -331,7 +336,7 @@
     opacity:1!important;
   }
   .page img{
-    opacity:1!important;background:#fff;
+    opacity:1!important;background:#fff;position:relative;z-index:1;
     backface-visibility:hidden;-webkit-backface-visibility:hidden;
   }
   .stf__item{background:#fff!important;opacity:1!important;isolation:isolate}
@@ -344,7 +349,7 @@
      .page::after rather than on #book itself so it regenerates automatically
      every time build() tears down and recreates the .page divs (a class
      toggled on #book would be wiped by el.innerHTML=''; <html> persists). */
-  .page::after{content:'';position:absolute;inset:0;pointer-events:none}
+  .page::after{content:'';position:absolute;inset:0;pointer-events:none;z-index:2}
   html[data-paper="cream"] .page::after{
     background:radial-gradient(130% 140% at 50% 38%,rgba(0,0,0,0) 55%,rgba(110,80,35,.10) 100%),#f6ecd4;
     mix-blend-mode:multiply;opacity:.5;
@@ -372,6 +377,7 @@
       rgba(0,0,0,.13) 58%, rgba(0,0,0,0) 100%);
     mix-blend-mode:multiply;opacity:.85;
   }
+  html.flip-active #gutter{opacity:0!important}
 
   /* ---------------- bottom scrubber ---------------- */
   #bottom{
@@ -918,7 +924,10 @@ function build(startPage) {
   });
   flip.loadFromHTML(el.querySelectorAll('.page'));
   flip.on('flip', function () { sync(); });
-  flip.on('changeState', function (e) { if (e.data === 'flipping') playFlip(); });
+  flip.on('changeState', function (e) {
+    document.documentElement.classList.toggle('flip-active', e.data === 'flipping');
+    if (e.data === 'flipping') playFlip();
+  });
 
   var s = document.getElementById('scrub');
   s.min = 1; s.max = total;
