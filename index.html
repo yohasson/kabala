@@ -349,14 +349,27 @@
      .page::after rather than on #book itself so it regenerates automatically
      every time build() tears down and recreates the .page divs (a class
      toggled on #book would be wiped by el.innerHTML=''; <html> persists). */
-  .page::after{content:'';position:absolute;inset:0;pointer-events:none;z-index:2}
+  .page::after{
+    content:'';position:absolute;inset:0;pointer-events:none;z-index:2;
+    background:var(--inner-edge-shade,transparent);mix-blend-mode:multiply;opacity:1;
+  }
+  .page.--left::after{
+    --inner-edge-shade:linear-gradient(to left,
+      rgba(0,0,0,.18) 0%, rgba(0,0,0,.10) 7%, rgba(0,0,0,0) 18%);
+  }
+  .page.--right::after{
+    --inner-edge-shade:linear-gradient(to right,
+      rgba(0,0,0,.18) 0%, rgba(0,0,0,.10) 7%, rgba(0,0,0,0) 18%);
+  }
   html[data-paper="cream"] .page::after{
-    background:radial-gradient(130% 140% at 50% 38%,rgba(0,0,0,0) 55%,rgba(110,80,35,.10) 100%),#f6ecd4;
-    mix-blend-mode:multiply;opacity:.5;
+    background:var(--inner-edge-shade,transparent),
+      radial-gradient(130% 140% at 50% 38%,rgba(0,0,0,0) 55%,rgba(110,80,35,.10) 100%),
+      rgba(246,236,212,.5);
   }
   html[data-paper="aged"] .page::after{
-    background:radial-gradient(130% 140% at 50% 38%,rgba(0,0,0,0) 40%,rgba(80,55,15,.24) 100%),#ecd7a6;
-    mix-blend-mode:multiply;opacity:.68;
+    background:var(--inner-edge-shade,transparent),
+      radial-gradient(130% 140% at 50% 38%,rgba(0,0,0,0) 40%,rgba(80,55,15,.24) 100%),
+      rgba(236,215,166,.68);
   }
   /* Heyzine has no page-edge stack; the reference book sits as two clean sheets.
      Kept out of the DOM entirely rather than hidden, so layout() stays cheap. */
@@ -370,14 +383,7 @@
       rgba(0,0,0,.20) 0%, rgba(0,0,0,.09) 45%, rgba(0,0,0,0) 74%);
     filter:blur(14px);pointer-events:none;z-index:0;
   }
-  #gutter{
-    position:absolute;pointer-events:none;z-index:4;
-    background:linear-gradient(to right,
-      rgba(0,0,0,0) 0%, rgba(0,0,0,.13) 42%, rgba(0,0,0,.20) 50%,
-      rgba(0,0,0,.13) 58%, rgba(0,0,0,0) 100%);
-    mix-blend-mode:multiply;opacity:.85;
-  }
-  html.flip-active #gutter{opacity:0!important}
+  #gutter{display:none}
 
   /* ---------------- bottom scrubber ---------------- */
   #bottom{
