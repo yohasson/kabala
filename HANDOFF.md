@@ -1,7 +1,9 @@
 # HANDOFF — rebuilding the הולך בדרכי flipbook from the final edited book
 
 Written 8 Aug 2026, updated the same day after a second session (zoom-drag
-fix, paper-tone picker feature, PDF-replacement instructions in §15), for
+fix, paper-tone picker feature, PDF-replacement instructions in §15), and
+updated again 9 Aug 2026 after the `kabala` short-URL deployment and the
+soft-flip / spine-shadow transparency fixes, for
 whoever picks this up next after Yossi finishes the final text edit of the
 book. This is everything I learned building and fixing the current site,
 so you don't have to rediscover it.
@@ -21,10 +23,15 @@ family already had made of the same book
 (`https://heyzine.com/flip-book/a711a2a3d2.html`). Yossi wanted a free,
 self-hosted, ad-free equivalent that looks and feels the same.
 
-- **Live site:** https://yohasson.github.io/hebrew-flipbook/
-- **Repo:** `C:\Users\yohasson\.scout\hebrew-flipbook` — pushes to
-  `https://github.com/yohasson/hebrew-flipbook.git`, deployed via GitHub
+- **Live short URL:** https://yohasson.github.io/kabala/
+- **Repo:** current working clone is
+  `C:\Users\yohasson\.scout\scratchpad\kabala-work` — pushes to
+  `https://github.com/yohasson/kabala.git`, deployed via GitHub
   Pages from `main`.
+- **Legacy/older repo references:** this document originally described
+  `yohasson/hebrew-flipbook`; if you see that path below in old context,
+  treat it as historical unless you intentionally decide to update that
+  separate copy too. The user-facing short URL now lives in `kabala`.
 - **Engine:** [StPageFlip](https://github.com/Nodlik/StPageFlip) (MIT), a
   real 3D-curl page-flip library, **vendored locally** at
   `vendor/page-flip.browser.js` — do not change this back to loading from
@@ -59,11 +66,12 @@ images/large/page_NNN.jpg    (84 files)
        |
        v
 mksite4.py   -- generates the actual index.html from a template + these
-                image counts + _sounds.json, writes to
-                C:\Users\yohasson\.scout\hebrew-flipbook\index.html
+                image counts + _sounds.json. Before using it again, verify
+                its output path points at the active kabala checkout:
+                C:\Users\yohasson\.scout\scratchpad\kabala-work\index.html
        |
        v
-git add/commit/push  (from C:\Users\yohasson\.scout\hebrew-flipbook)
+git add/commit/push  (from C:\Users\yohasson\.scout\scratchpad\kabala-work)
        |
        v
 GitHub Pages serves it, ~60-90s after push
@@ -73,7 +81,7 @@ GitHub Pages serves it, ~60-90s after push
 ```powershell
 cd "...\HOLECH-BEDARKI\5_BUILD\ebook_src"
 python mksite4.py
-cd C:\Users\yohasson\.scout\hebrew-flipbook
+cd C:\Users\yohasson\.scout\scratchpad\kabala-work
 git add -A
 git commit -m "..."
 git push origin main
@@ -214,6 +222,64 @@ test page and confirming the reader still boots correctly.
 **If you ever update StPageFlip, re-vendor it the same way** — download
 the new version's `dist/js/page-flip.browser.js` into `vendor/`, don't
 add back a CDN `<script src>`.
+
+## 6A. Current flip-rendering baseline (9 Aug 2026) — preserve this on rebuild
+
+This section supersedes the temporary transparency experiments from the
+debugging session. The current short URL (`https://yohasson.github.io/kabala/`,
+commit `d4e102e`) should be treated as the visual baseline.
+
+**What is live now:**
+
+- `index.html` at the short URL uses the **soft / curled StPageFlip pages**.
+  Do **not** regenerate the site from the intermediate hard-page/sliver-
+  blanking version. That hard-page version was disliked by Yossi and is
+  preserved only as `solid-current.html` for comparison/history.
+- Page/fold/image opacity must stay at `1`. The Heyzine reference does not
+  solve flip artifacts by making page content translucent; its pages and
+  fold wrappers remain opaque and shadows/gradients do the visual work.
+- The soft flip still needs an **opaque reverse face** on each page:
+  `.page{transform-style:preserve-3d}`, `.page::before{background:#fff;
+  transform:rotateY(180deg) translateZ(.1px); backface-visibility:hidden}`,
+  and the page image stays `position:relative; z-index:1; opacity:1`.
+  Keep these rules if `mksite4.py` is regenerated.
+- The old single global `#gutter` spine overlay is intentionally disabled
+  (`#gutter{display:none}`). Do **not** bring back a high-`z-index` global
+  gutter, and do **not** hide/show it with `html.flip-active #gutter`.
+  That produced two opposite bugs: if visible, the spine/shadow painted
+  over the flipping sheet and looked like transparency; if hidden during
+  flips, the spine shadow disappeared momentarily until the page completed
+  the turn.
+- The current fix is **per-page inner-edge shading** on `.page::after`:
+  `.page.--left::after` and `.page.--right::after` define
+  `--inner-edge-shade` gradients on the page's own inner edge, combined
+  with the paper-tone overlays. Because the shading belongs to the page,
+  a flipping page naturally occludes it instead of requiring JS timing.
+- Keep `#spreadfx` for the spread-wide ambient shadow. It is not the same
+  thing as the gutter; it sits below the book and gives the book its outer
+  contour.
+
+**Important deployment split:**
+
+- Short URL / current preferred experience:
+  `https://yohasson.github.io/kabala/?v=d4e102e` (soft flip with per-page
+  spine shading).
+- Preserved hard-page/sliver version:
+  `https://yohasson.github.io/kabala/solid-current.html?v=bb52cb3`.
+- Historical rollback file:
+  `rolledback.html` exists from the debugging path. Do not assume it is the
+  authoritative entry point; `index.html` is what the short URL serves.
+
+**How to validate this after any PDF/image rebuild:**
+
+1. Open the rebuilt short URL with a cache-buster.
+2. Turn several interior pages, not just cover pages.
+3. Capture or inspect a mid-flip frame. The spine shadow should remain
+   visually present, but it must not be painted through/on top of the
+   flipping page.
+4. In DevTools/Playwright, confirm visible `.page` and `.page img` elements
+   report `opacity: 1`; `#gutter` should be `display:none`; the page
+   `::after` backgrounds should include `--inner-edge-shade`.
 
 ## 7. Edition-switch continuity — what's there now, and how to make it exact
 
@@ -396,7 +462,7 @@ push succeeding as proof it's live — fetch and hash-compare:
 ```powershell
 git push origin main
 Start-Sleep -Seconds 75
-Invoke-WebRequest "https://yohasson.github.io/hebrew-flipbook/index.html?cb=$(Get-Random)" -OutFile "$env:TEMP\live.html" -UseBasicParsing
+Invoke-WebRequest "https://yohasson.github.io/kabala/index.html?cb=$(Get-Random)" -OutFile "$env:TEMP\live.html" -UseBasicParsing
 # compare $env:TEMP\live.html against your local index.html (normalize CRLF/LF - git
 # checks out CRLF locally but serves LF, which will otherwise look like a false mismatch)
 ```
@@ -423,8 +489,11 @@ production, not just committed locally.
       rasterize_large.py      large-edition PDF -> JPEGs (INPUT PDF MISSING, see §3)
       pageflip.js              a saved copy of the vendored library (source of vendor/ in the site repo)
 
-C:\Users\yohasson\.scout\hebrew-flipbook\      the deployed site's git repo
-  index.html                 generated by mksite4.py - do not hand-edit, re-run the generator
+C:\Users\yohasson\.scout\scratchpad\kabala-work\      the deployed site's git repo / working clone
+  index.html                 short-URL entry point. Originally generated by mksite4.py,
+                             but now contains post-generator hand fixes from §6A; if
+                             you regenerate it, port those fixes into the generator
+                             or re-apply them before deploying.
   vendor\page-flip.browser.js  vendored StPageFlip - see §6, do not revert to CDN
   images\regular\, images\large\   the STALE 68pp/84pp page images, see §3
   _sounds.json                generated by mksounds3.py
@@ -433,7 +502,7 @@ C:\Users\yohasson\.scout\hebrew-flipbook\      the deployed site's git repo
 
 ---
 
-## 12. Final verification status (8 Aug 2026, updated after a second round of fixes)
+## 12. Final verification status (8-9 Aug 2026, updated after the soft-flip fixes)
 
 Before handing this off, every UI bug reported by Yossi across this whole
 session was re-tested live and confirmed fixed on the deployed site.
@@ -505,6 +574,20 @@ but the short version if you only read this section:
   approximately the same paragraph when switching — see §7 for the exact
   (non-approximate) upgrade path if you want to do it properly during
   the rebuild.
+- ✅ **Short URL now uses the preferred soft/curl flip.** On 9 Aug 2026,
+  Yossi rejected the hard-page/sliver-blanking fix as looking wrong. The
+  short URL (`/kabala/`, `index.html`) was switched back to the older
+  soft/curl feel, with the opacity fixes from §6A. The hard/sliver version
+  is preserved as `solid-current.html`; do not overwrite the short URL with
+  it unless Yossi explicitly asks.
+- ✅ **Flip transparency / spine-shadow bug fixed.** The apparent page
+  transparency was not CSS `opacity`; it was a global high-`z-index`
+  `#gutter` spine overlay painting on top of the curled page. Hiding that
+  overlay during flips fixed the transparency but made the spine disappear
+  momentarily, which Yossi also rejected. Final fix: remove the global
+  gutter overlay (`#gutter{display:none}`) and render the spine as
+  per-page inner-edge gradients on `.page::after`, so the spine remains
+  visible during flips but is naturally occluded by the moving sheet.
 
 **A meta-lesson from this whole debugging arc, worth internalizing before
 you touch this code again:** the same underlying bug (StPageFlip's
@@ -648,7 +731,7 @@ re-rasterize):**
    what the deployed site actually expects
    (`images/<edition>/page_NNN.jpg`, e.g. `page_001.jpg`). Either change
    `DST` to point directly at
-   `C:\Users\yohasson\.scout\hebrew-flipbook\images\regular` (and `\large`
+   `C:\Users\yohasson\.scout\scratchpad\kabala-work\images\regular` (and `\large`
    for the large script) and change the output filename pattern from
    `f"p{i+1:03d}.jpg"` to `f"page_{i+1:03d}.jpg"`, or rasterize to the
    staging folder as-is and then copy+rename into the deployed `images/`
@@ -669,7 +752,7 @@ re-rasterize):**
    ```powershell
    cd "...\HOLECH-BEDARKI\5_BUILD\ebook_src"
    python mksite4.py
-   cd C:\Users\yohasson\.scout\hebrew-flipbook
+   cd C:\Users\yohasson\.scout\scratchpad\kabala-work
    git add -A
    git commit -m "Replace source PDF / regenerate pages"
    git push origin main

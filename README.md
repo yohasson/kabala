@@ -2,7 +2,7 @@
 
 סיפור חייו של יעקב קבלה. ספר דיגיטלי לדפדוף, בעברית, מימין לשמאל.
 
-**לקריאה: https://yohasson.github.io/hebrew-flipbook/**
+**לקריאה: https://yohasson.github.io/kabala/**
 
 ---
 
