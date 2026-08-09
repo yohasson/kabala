@@ -324,21 +324,18 @@
   .page{
     background:#fff;overflow:hidden;box-shadow:0 0 20px rgba(0,0,0,.2);position:relative;
     opacity:1!important;isolation:isolate;transform-style:preserve-3d;
-    backface-visibility:hidden;-webkit-backface-visibility:hidden;
   }
   .page::before{
     content:'';position:absolute;inset:0;background:#fff;pointer-events:none;
     transform:rotateY(180deg) translateZ(.1px);
     backface-visibility:hidden;-webkit-backface-visibility:hidden;
   }
-  #book .stf__item,
-  #book .stf__item *{
-    opacity:1!important;
-  }
   .page img{
-    opacity:1!important;background:#fff;position:relative;z-index:1;
+    opacity:1;background:#fff;position:relative;z-index:1;
     backface-visibility:hidden;-webkit-backface-visibility:hidden;
   }
+  .page.flip-blank img{opacity:0!important}
+  .page.flip-blank::after{display:none!important}
   .stf__item{background:#fff!important;opacity:1!important;isolation:isolate}
   /* Paper-tone overlay. Page content is a flat scanned JPEG (not live text),
      so re-colouring the paper itself means tinting on TOP of the image
@@ -377,7 +374,6 @@
       rgba(0,0,0,.13) 58%, rgba(0,0,0,0) 100%);
     mix-blend-mode:multiply;opacity:.85;
   }
-  html.flip-active #gutter{opacity:0!important}
 
   /* ---------------- bottom scrubber ---------------- */
   #bottom{
@@ -886,7 +882,7 @@ function build(startPage) {
   list.forEach(function (src, i) {
     var d = document.createElement('div');
     d.className = 'page';
-    if (i === 0 || i === list.length - 1) d.setAttribute('data-density', 'hard');
+    d.setAttribute('data-density', 'hard');
     var im = document.createElement('img');
     im.src = src; im.alt = 'עמוד ' + (i + 1);
     im.loading = i < 6 ? 'eager' : 'lazy';
@@ -900,11 +896,11 @@ function build(startPage) {
     size: 'fixed',
     showCover: true,
     usePortrait: true,
-    maxShadowOpacity: 0.2,
-    flippingTime: 1000,
+    maxShadowOpacity: 0,
+    flippingTime: 780,
     mobileScrollSupport: false,
     swipeDistance: 24,
-    drawShadow: true,
+    drawShadow: false,
     /* StPageFlip has its OWN built-in "hover near a corner" animated fold
        preview (userMove() -> showCorner()), gated by showPageCorners
        (default true). This used to be mirrored wrong - and so did the real
@@ -925,8 +921,12 @@ function build(startPage) {
   flip.loadFromHTML(el.querySelectorAll('.page'));
   flip.on('flip', function () { sync(); });
   flip.on('changeState', function (e) {
-    document.documentElement.classList.toggle('flip-active', e.data === 'flipping');
-    if (e.data === 'flipping') playFlip();
+    if (e.data === 'flipping') {
+      playFlip();
+      trackFlipBlanking();
+    } else {
+      clearFlipBlanking();
+    }
   });
 
   var s = document.getElementById('scrub');
@@ -959,6 +959,31 @@ function offsetFor(i) {
 }
 
 function sync() { updateCounter(); layout(); }
+
+function clearFlipBlanking() {
+  document.querySelectorAll('.flip-blank').forEach(function (el) {
+    el.classList.remove('flip-blank');
+  });
+}
+
+function markFlipBlanking() {
+  var maxW = (PW || 1) * 0.72;
+  document.querySelectorAll('.page').forEach(function (el) {
+    var r = el.getBoundingClientRect();
+    var transformed = getComputedStyle(el).transform !== 'none';
+    el.classList.toggle('flip-blank', transformed && r.width > 0 && r.width < maxW);
+  });
+}
+
+function trackFlipBlanking() {
+  var until = performance.now() + 900;
+  function tick() {
+    markFlipBlanking();
+    if (performance.now() < until) requestAnimationFrame(tick);
+    else clearFlipBlanking();
+  }
+  tick();
+}
 
 function layout() {
   if (!flip) return;
@@ -1100,7 +1125,7 @@ function showPrev(p) {
   else { L.style.display = 'none'; }
   R.src = list[lo - 1];
   box.querySelector('.lbl').textContent =
-    hi ? (printedPage(lo) + ' - ' + printedPage(hi)) : String(printedPage(lo));
+    hi ? (printedPage(hi) + ' - ' + printedPage(lo)) : String(printedPage(lo));
   box.classList.add('on');
   var s = document.getElementById('scrub');
   var r = s.getBoundingClientRect();
