@@ -1717,6 +1717,7 @@ const webgl3d = {
   renderer: null, scene: null, camera: null, controls: null, group: null,
   raf: 0, lastKey: '', textures: {}
 };
+window.webgl3d = webgl3d;
 
 function tex(url) {
   if (webgl3d.textures[url]) return webgl3d.textures[url];
@@ -1807,13 +1808,36 @@ function addPageEdges(group, width, height, depth, x) {
 
 function addClosedBook(group, page) {
   addPageEdges(group, 4.12, 5.78, .48, 0);
-  const cover = new THREE.Mesh(new THREE.BoxGeometry(4.18, .10, 5.84), [
-    mat(0x17364c), mat(0x17364c), mat(0x17364c), mat(0x17364c), texturedMat(pageSrc(edition, page), .55), mat(0x183247)
+  const frontCover = texturedMat('images/cover/front.jpg', .58);
+  const backCover = texturedMat('images/cover/back.jpg', .62);
+  const spineCover = texturedMat('images/cover/spine.jpg', .78);
+  spineCover.transparent = false;
+  spineCover.opacity = 1;
+  const coverBlue = mat(0x17364c, .78);
+  const cover = new THREE.Mesh(new THREE.BoxGeometry(4.18, .12, 5.84), [
+    spineCover,      // Hebrew book spine: right-hand side when front cover is facing up
+    coverBlue,       // fore edge
+    frontCover,      // top/front cover
+    backCover,       // underside/back cover
+    coverBlue,       // head
+    coverBlue        // tail
   ]);
-  cover.position.y = .30;
+  cover.position.y = .32;
   cover.castShadow = true;
   cover.receiveShadow = true;
   group.add(cover);
+
+  // Hebrew books have the spine on the right-hand side of the front cover.
+  // Cover that entire side with the spine artwork instead of exposing the paper block.
+  const spineSideMat = texturedMat('images/cover/spine-side.jpg', .78);
+  spineSideMat.side = THREE.DoubleSide;
+  spineSideMat.emissiveIntensity = .12;
+  const spinePanel = new THREE.Mesh(new THREE.PlaneGeometry(5.84, .62), spineSideMat);
+  spinePanel.rotation.y = Math.PI / 2;
+  spinePanel.position.set(2.165, .06, 0);
+  spinePanel.castShadow = true;
+  spinePanel.receiveShadow = true;
+  group.add(spinePanel);
 }
 
 function addOpenBook(group, rightPage, leftPage) {
@@ -1852,7 +1876,7 @@ function init3DRenderer() {
   webgl3d.scene.background = null;
 
   webgl3d.camera = new THREE.PerspectiveCamera(34, host.clientWidth / Math.max(1, host.clientHeight), .1, 100);
-  webgl3d.camera.position.set(4.9, 4.9, 7.9);
+  webgl3d.camera.position.set(7.4, 4.4, 6.2);
 
   webgl3d.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
   webgl3d.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
@@ -1870,8 +1894,8 @@ function init3DRenderer() {
   webgl3d.controls.dampingFactor = .08;
   webgl3d.controls.minDistance = 6.0;
   webgl3d.controls.maxDistance = 10.8;
-  webgl3d.controls.minPolarAngle = THREE.MathUtils.degToRad(30);
-  webgl3d.controls.maxPolarAngle = THREE.MathUtils.degToRad(72);
+  webgl3d.controls.minPolarAngle = THREE.MathUtils.degToRad(12);
+  webgl3d.controls.maxPolarAngle = THREE.MathUtils.degToRad(128);
   webgl3d.controls.target.set(0, .05, 0);
 
   const hemi = new THREE.HemisphereLight(0xfff7ee, 0x2a211b, .72);
@@ -1951,7 +1975,7 @@ window.toggle3D = function () {
 
 window.reset3D = function () {
   if (!webgl3d.controls) return;
-  webgl3d.camera.position.set(4.9, 4.9, 7.9);
+  webgl3d.camera.position.set(7.4, 4.4, 6.2);
   webgl3d.controls.target.set(0, .05, 0);
   webgl3d.controls.update();
 };
