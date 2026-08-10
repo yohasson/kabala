@@ -340,6 +340,12 @@
     opacity:1!important;background:#fff;position:relative;z-index:1;
     backface-visibility:hidden;-webkit-backface-visibility:hidden;
   }
+  @media (max-width:900px){
+    html.flip-active #book .page.mobile-flip-back img{opacity:0!important}
+    html.flip-active #book .page.mobile-flip-back::after{
+      background:#fff!important;mix-blend-mode:normal!important;opacity:1!important;
+    }
+  }
   .stf__item{background:#fff!important;opacity:1!important;isolation:isolate}
   /* Paper-tone overlay. Page content is a flat scanned JPEG (not live text),
      so re-colouring the paper itself means tinting on TOP of the image
@@ -385,6 +391,52 @@
     filter:blur(14px);pointer-events:none;z-index:0;
   }
   #gutter{display:none}
+
+  /* ---------------- desktop 3D inspection mode ---------------- */
+  #view3d{
+    position:fixed;inset:0;z-index:55;display:none;align-items:center;justify-content:center;
+    background:rgba(20,20,20,.72);direction:ltr;overflow:hidden;touch-action:none;
+  }
+  html.view3d #view3d{display:flex}
+  html.view3d #stage,html.view3d #bottom{filter:blur(1px);pointer-events:none}
+  #view3dPanel{
+    position:absolute;top:16px;right:16px;z-index:2;direction:rtl;
+    background:rgba(255,255,255,.88);border-radius:8px;padding:.45rem;display:flex;gap:.25rem;align-items:center;
+  }
+  html.dark #view3dPanel{background:rgba(32,32,32,.9)}
+  #view3dHint{
+    position:absolute;bottom:16px;left:50%;transform:translateX(-50%);
+    color:#fff;background:rgba(0,0,0,.32);border-radius:999px;padding:.35rem .75rem;
+    font-size:.78rem;direction:rtl;pointer-events:none;
+  }
+  #view3dScene{width:min(86vw,980px);height:min(78vh,720px);perspective:1600px;display:flex;align-items:center;justify-content:center}
+  #book3d{
+    position:relative;transform-style:preserve-3d;
+    transform:rotateX(var(--rx,-18deg)) rotateY(var(--ry,-28deg)) scale(var(--s,1));
+    transition:transform .08s linear;
+  }
+  .book3d-sheet{
+    position:absolute;top:50%;width:245px;height:346px;margin-top:-173px;background:#fff;
+    box-shadow:0 18px 42px rgba(0,0,0,.35);overflow:hidden;backface-visibility:hidden;
+  }
+  .book3d-sheet img{width:100%;height:100%;object-fit:cover;display:block}
+  .book3d-sheet.single{left:50%;margin-left:-122.5px;transform:translateZ(24px)}
+  .book3d-sheet.right{right:0;transform-origin:left center;transform:rotateY(-5deg) translateZ(18px)}
+  .book3d-sheet.left{left:0;transform-origin:right center;transform:rotateY(5deg) translateZ(18px)}
+  .book3d-spine{
+    position:absolute;left:50%;top:50%;width:26px;height:346px;margin-top:-173px;margin-left:-13px;
+    background:linear-gradient(90deg,rgba(0,0,0,.45),rgba(255,255,255,.1),rgba(0,0,0,.32));
+    transform:translateZ(8px);box-shadow:0 0 22px rgba(0,0,0,.28);
+  }
+  .book3d-block{
+    position:absolute;left:50%;top:50%;width:265px;height:356px;margin-left:-132.5px;margin-top:-178px;
+    background:linear-gradient(90deg,#ddd,#fff 18%,#eee 82%,#d7d7d7);
+    transform:translateZ(-16px);box-shadow:0 24px 48px rgba(0,0,0,.42);
+  }
+  .book3d-closed .book3d-block{width:255px;margin-left:-127.5px;border-radius:2px}
+  .book3d-open{width:520px;height:360px}
+  .book3d-closed{width:270px;height:360px}
+  @media (max-width:900px){#view3dbtn{display:none}}
 
   /* ---------------- bottom scrubber ---------------- */
   #bottom{
@@ -554,6 +606,9 @@
     <button class="ico" onclick="toggleFullscreen()" title="מסך מלא" aria-label="מסך מלא">
       <svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
     </button>
+    <button class="ico" id="view3dbtn" onclick="toggle3D()" title="תצוגת תלת־ממד" aria-label="תצוגת תלת־ממד">
+      <svg viewBox="0 0 24 24"><path d="M12 3 4.5 7.2 12 11.4l7.5-4.2L12 3z"/><path d="M4.5 7.2v8.4L12 21V11.4"/><path d="M19.5 7.2v8.4L12 21"/></svg>
+    </button>
   </div>
   <div class="toolrow">
     <!-- Paper-tone picker: cycles white -> cream -> aged sepia. Reuses the
@@ -626,6 +681,19 @@
   </div>
 </div>
 
+<div id="view3d" aria-label="תצוגת תלת־ממד">
+  <div id="view3dPanel">
+    <button class="ico" onclick="reset3D()" title="איפוס זווית" aria-label="איפוס זווית">
+      <svg viewBox="0 0 24 24"><path d="M20 6v5h-5"/><path d="M4 18v-5h5"/><path d="M18.5 9A7 7 0 0 0 6.4 6.4L4 9"/><path d="M5.5 15A7 7 0 0 0 17.6 17.6L20 15"/></svg>
+    </button>
+    <button class="ico" onclick="close3D()" title="סגור" aria-label="סגור">
+      <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg>
+    </button>
+  </div>
+  <div id="view3dScene"><div id="book3d"></div></div>
+  <div id="view3dHint">גרור כדי לסובב · גלגל עכבר לזום · Esc לסגירה</div>
+</div>
+
 <div id="bottom">
   <div id="nav">
     <button class="ico" id="btnPrev" onclick="prevPage()" title="עמוד קודם" aria-label="עמוד קודם">
@@ -653,6 +721,7 @@ var edition = 'regular';
 var flip = null, total = 0, zoom = 1, panX = 0, panY = 0, PW = 0, portrait = false;
 var stage = document.getElementById('stage');
 var wrap = document.getElementById('zoomwrap');
+var view3D = { on:false, rx:-18, ry:-28, s:1, dragging:false, x:0, y:0 };
 
 /* ---------------- page-turn sound ---------------- */
 var sndOn = true, sndPool = [], sndIdx = 0, lastFlipSound = 0;
@@ -969,6 +1038,7 @@ function build(startPage) {
   flip.on('flip', function () { sync(); });
   flip.on('changeState', function (e) {
     document.documentElement.classList.toggle('flip-active', e.data === 'flipping');
+    updateMobileFlipBacks(e.data === 'flipping');
     if (e.data === 'flipping') playFlip();
   });
 
@@ -1001,7 +1071,23 @@ function offsetFor(i) {
   return 0;
 }
 
-function sync() { updateCounter(); layout(); }
+function sync() { updateCounter(); layout(); sync3DIfOpen(); }
+function sync3DIfOpen() { if (view3D.on) render3D(); }
+
+function updateMobileFlipBacks(active) {
+  document.querySelectorAll('#book .page.mobile-flip-back').forEach(function (el) {
+    el.classList.remove('mobile-flip-back');
+  });
+  if (!active || stage.clientWidth >= 815) return;
+  document.querySelectorAll('#book .page').forEach(function (el, idx) {
+    if (idx >= total && !el.classList.contains('--simple')) {
+      el.classList.add('mobile-flip-back');
+    }
+  });
+  if (active) requestAnimationFrame(function () {
+    if (document.documentElement.classList.contains('flip-active')) updateMobileFlipBacks(true);
+  });
+}
 
 function layout() {
   if (!flip) return;
@@ -1109,8 +1195,8 @@ function updateCounter() {
   if (!scrubbing) s.value = i + 1;
 }
 
-function nextPage() { if (flip) { playFlip(); flip.flipNext(); } }
-function prevPage() { if (flip) { playFlip(); flip.flipPrev(); } }
+function nextPage() { if (view3D.on) return; if (flip) { playFlip(); flip.flipNext(); } }
+function prevPage() { if (view3D.on) return; if (flip) { playFlip(); flip.flipPrev(); } }
 function scrollPage(dir) {
   if (!flip) return;
   var p = Math.max(1, Math.min(total, flip.getCurrentPageIndex() + 1 + dir));
@@ -1395,6 +1481,88 @@ document.addEventListener('pointerout', function (e) {
   });
 });
 
+function visible3DPages() {
+  var current = flip ? flip.getCurrentPageIndex() + 1 : 1;
+  var pair = spreadOf(current);
+  var pages = [];
+  if (!pair[1]) {
+    pages.push({ side:'single', raw: rawPageForDisplay(pair[0]) });
+  } else {
+    pages.push({ side:'right', raw: rawPageForDisplay(pair[0]) });
+    pages.push({ side:'left', raw: rawPageForDisplay(pair[1]) });
+  }
+  return pages.filter(function (p) { return p.raw && p.raw <= EDITIONS[edition].pages; });
+}
+
+function apply3DTransform() {
+  var el = document.getElementById('book3d');
+  if (!el) return;
+  el.style.setProperty('--rx', view3D.rx + 'deg');
+  el.style.setProperty('--ry', view3D.ry + 'deg');
+  el.style.setProperty('--s', view3D.s);
+}
+
+function render3D() {
+  var el = document.getElementById('book3d');
+  if (!el) return;
+  var pages = visible3DPages();
+  var closed = pages.length === 1;
+  el.className = closed ? 'book3d-closed' : 'book3d-open';
+  el.innerHTML = '<div class="book3d-block"></div>' + (closed ? '' : '<div class="book3d-spine"></div>') +
+    pages.map(function (p) {
+      return '<div class="book3d-sheet ' + p.side + '"><img src="' + pageSrc(edition, p.raw) + '" alt=""></div>';
+    }).join('');
+  apply3DTransform();
+}
+
+function toggle3D() {
+  if (stage.clientWidth < 815) return;
+  view3D.on ? close3D() : open3D();
+}
+
+function open3D() {
+  if (stage.clientWidth < 815) return;
+  view3D.on = true;
+  document.documentElement.classList.add('view3d');
+  render3D();
+}
+
+function close3D() {
+  view3D.on = false;
+  document.documentElement.classList.remove('view3d');
+}
+
+function reset3D() {
+  view3D.rx = -18; view3D.ry = -28; view3D.s = 1;
+  apply3DTransform();
+}
+
+(function () {
+  var overlay = document.getElementById('view3d');
+  if (!overlay) return;
+  overlay.addEventListener('pointerdown', function (e) {
+    if (e.target.closest && e.target.closest('#view3dPanel')) return;
+    view3D.dragging = true; view3D.x = e.clientX; view3D.y = e.clientY;
+    overlay.setPointerCapture && overlay.setPointerCapture(e.pointerId);
+    e.preventDefault();
+  });
+  overlay.addEventListener('pointermove', function (e) {
+    if (!view3D.dragging) return;
+    view3D.ry += (e.clientX - view3D.x) * .35;
+    view3D.rx = Math.max(-65, Math.min(55, view3D.rx - (e.clientY - view3D.y) * .25));
+    view3D.x = e.clientX; view3D.y = e.clientY;
+    apply3DTransform();
+  });
+  ['pointerup','pointercancel'].forEach(function (type) {
+    overlay.addEventListener(type, function () { view3D.dragging = false; });
+  });
+  overlay.addEventListener('wheel', function (e) {
+    e.preventDefault();
+    view3D.s = Math.max(.65, Math.min(1.9, view3D.s + (e.deltaY < 0 ? .08 : -.08)));
+    apply3DTransform();
+  }, { passive:false });
+})();
+
 function setEdition(ed) {
   if (ed === edition) return;
   /* Switch to the page in the other edition that contains the same content.
@@ -1415,7 +1583,7 @@ function setEdition(ed) {
     var targetRaw = mapEditionPage(oldEdition, ed, oldRawPage);
     var target = displayPageForRawInEdition(ed, targetRaw, hideEmpty);
     target = Math.max(1, Math.min(newTotal, target));
-    build(target); setZoom(1);
+    build(target); setZoom(1); sync3DIfOpen();
     l.classList.add('done');
   });
   try { localStorage.setItem('hb_ed', ed); } catch (e) {}
@@ -1474,6 +1642,8 @@ function mapEditionSpread(fromEdition, toEdition, spreadStart) {
 
 document.addEventListener('keydown', function (e) {
   if (e.target.tagName === 'INPUT') return;
+  if (e.key === 'Escape' && view3D.on) { close3D(); return; }
+  if (e.key === '3') toggle3D();
   if (e.key === 'ArrowRight') prevPage();
   if (e.key === 'ArrowLeft') nextPage();
   if (e.key === 'Escape') closeToc();
