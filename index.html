@@ -397,10 +397,13 @@
   /* ---------------- desktop 3D inspection mode ---------------- */
   #view3d{
     position:fixed;inset:0;z-index:55;display:none;align-items:center;justify-content:center;
-    background:rgba(20,20,20,.72);direction:ltr;overflow:hidden;touch-action:none;
+    background:
+      radial-gradient(circle at 50% 36%,rgba(255,255,255,.18),rgba(255,255,255,0) 34%),
+      linear-gradient(145deg,#5d554d 0%,#312d29 58%,#181716 100%);
+    direction:ltr;overflow:hidden;touch-action:none;
   }
   html.view3d #view3d{display:flex}
-  html.view3d #stage,html.view3d #bottom{filter:blur(1px);pointer-events:none}
+  html.view3d #stage,html.view3d #bottom{filter:blur(2px);opacity:.18;pointer-events:none}
   #view3dPanel{
     position:absolute;top:16px;right:16px;z-index:2;direction:rtl;
     background:rgba(255,255,255,.88);border-radius:8px;padding:.45rem;display:flex;gap:.25rem;align-items:center;
@@ -461,6 +464,8 @@
   .book3d-open .book3d-block{width:calc(var(--page-w) * 2 + 18px);margin-left:calc((var(--page-w) * -1) - 9px)}
   .book3d-closed{width:var(--page-w);height:var(--page-h)}
   .book3d-open{width:calc(var(--page-w) * 2 + 18px);height:var(--page-h)}
+  #book3d.webgl3d{width:100%;height:100%;transform:none!important;transition:none}
+  #book3d.webgl3d canvas{width:100%!important;height:100%!important;display:block}
   @media (max-width:900px){#view3dbtn{display:none}}
 
   /* ---------------- bottom scrubber ---------------- */
@@ -1703,6 +1708,232 @@ warm(srcs(edition), 4, function () {
   initSound();
   document.getElementById('load').classList.add('done');
 });
+</script>
+<script type="module">
+import * as THREE from './vendor/three.module.min.js';
+import { OrbitControls } from './vendor/OrbitControls.js';
+
+const webgl3d = {
+  renderer: null, scene: null, camera: null, controls: null, group: null,
+  raf: 0, lastKey: ''
+};
+
+function tex(url) {
+  const loader = new THREE.TextureLoader();
+  const t = loader.load(url);
+  t.colorSpace = THREE.SRGBColorSpace;
+  t.anisotropy = 8;
+  return t;
+}
+
+function mat(color, roughness = .7) {
+  return new THREE.MeshStandardMaterial({ color, roughness, metalness: 0 });
+}
+
+function texturedMat(url, roughness = .62) {
+  return new THREE.MeshStandardMaterial({
+    map: tex(url),
+    roughness,
+    metalness: 0,
+    side: THREE.FrontSide
+  });
+}
+
+function pagePlane(url, x, yRot, z, sideName) {
+  const geo = new THREE.PlaneGeometry(4, 5.66, 32, 32);
+  const pos = geo.attributes.position;
+  for (let i = 0; i < pos.count; i++) {
+    const px = pos.getX(i), py = pos.getY(i);
+    const edgeLift = Math.pow(Math.abs(px) / 2, 1.8) * .045;
+    const softSag = (1 - Math.pow(Math.abs(py) / 2.83, 2)) * -.025;
+    pos.setZ(i, edgeLift + softSag);
+  }
+  pos.needsUpdate = true;
+  geo.computeVertexNormals();
+  const mesh = new THREE.Mesh(geo, texturedMat(url));
+  mesh.position.set(x, 0, z);
+  mesh.rotation.y = yRot;
+  mesh.castShadow = true;
+  mesh.receiveShadow = true;
+  mesh.name = sideName;
+  return mesh;
+}
+
+function addPageEdges(group, width, height, depth, x) {
+  const edgeMat = new THREE.MeshStandardMaterial({
+    color: 0xeee8dc,
+    roughness: .86,
+    metalness: 0,
+    bumpScale: .018
+  });
+  const block = new THREE.Mesh(new THREE.BoxGeometry(width, height, depth), edgeMat);
+  block.position.set(x, 0, -depth / 2 - .04);
+  block.castShadow = true;
+  block.receiveShadow = true;
+  group.add(block);
+
+  // Fine paper lines on the fore-edge, enough to read as a real page block.
+  const lineMat = new THREE.LineBasicMaterial({ color: 0xcfc6b8, transparent: true, opacity: .48 });
+  const lines = new THREE.Group();
+  const count = 34;
+  for (let i = 0; i < count; i++) {
+    const yy = -height / 2 + (i + .5) * height / count;
+    const g = new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(-width / 2, yy, depth / 2 + .003),
+      new THREE.Vector3(width / 2, yy, depth / 2 + .003)
+    ]);
+    lines.add(new THREE.Line(g, lineMat));
+  }
+  lines.position.set(x, 0, -depth - .08);
+  group.add(lines);
+  return block;
+}
+
+function addClosedBook(group, page) {
+  addPageEdges(group, 4.12, 5.78, .48, 0);
+  const cover = new THREE.Mesh(new THREE.BoxGeometry(4.18, 5.84, .10), [
+    mat(0x17364c), mat(0x17364c), mat(0x17364c), mat(0x17364c), texturedMat(pageSrc(edition, page), .55), mat(0x183247)
+  ]);
+  cover.position.z = .28;
+  cover.castShadow = true;
+  cover.receiveShadow = true;
+  group.add(cover);
+}
+
+function addOpenBook(group, rightPage, leftPage) {
+  addPageEdges(group, 8.28, 5.76, .38, 0);
+  const gutter = new THREE.Mesh(new THREE.BoxGeometry(.16, 5.86, .44), mat(0x6f6257, .82));
+  gutter.position.set(0, 0, .03);
+  gutter.castShadow = true;
+  gutter.receiveShadow = true;
+  group.add(gutter);
+
+  const right = pagePlane(pageSrc(edition, rightPage), -2.02, THREE.MathUtils.degToRad(3.5), .27, 'right-page');
+  const left = pagePlane(pageSrc(edition, leftPage), 2.02, THREE.MathUtils.degToRad(-3.5), .27, 'left-page');
+  group.add(right, left);
+
+  const creaseMat = new THREE.MeshStandardMaterial({ color: 0x000000, transparent: true, opacity: .18, roughness: 1 });
+  const crease = new THREE.Mesh(new THREE.BoxGeometry(.035, 5.72, .012), creaseMat);
+  crease.position.set(0, 0, .31);
+  group.add(crease);
+}
+
+function current3DPages() {
+  const current = window.flip ? window.flip.getCurrentPageIndex() + 1 : 1;
+  const pair = window.spreadOf(current);
+  if (!pair[1]) return [window.rawPageForDisplay(pair[0])];
+  return [window.rawPageForDisplay(pair[0]), window.rawPageForDisplay(pair[1])];
+}
+
+function init3DRenderer() {
+  const host = document.getElementById('book3d');
+  host.className = 'webgl3d';
+  host.innerHTML = '';
+  webgl3d.scene = new THREE.Scene();
+  webgl3d.scene.background = null;
+
+  webgl3d.camera = new THREE.PerspectiveCamera(38, host.clientWidth / Math.max(1, host.clientHeight), .1, 100);
+  webgl3d.camera.position.set(5.8, 5.0, 7.6);
+
+  webgl3d.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  webgl3d.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  webgl3d.renderer.setSize(host.clientWidth, host.clientHeight);
+  webgl3d.renderer.outputColorSpace = THREE.SRGBColorSpace;
+  webgl3d.renderer.shadowMap.enabled = true;
+  webgl3d.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  host.appendChild(webgl3d.renderer.domElement);
+
+  webgl3d.controls = new OrbitControls(webgl3d.camera, webgl3d.renderer.domElement);
+  webgl3d.controls.enablePan = false;
+  webgl3d.controls.enableDamping = true;
+  webgl3d.controls.dampingFactor = .08;
+  webgl3d.controls.minDistance = 5.5;
+  webgl3d.controls.maxDistance = 14;
+  webgl3d.controls.target.set(0, -.15, 0);
+
+  const hemi = new THREE.HemisphereLight(0xffffff, 0x3b2f26, 1.35);
+  webgl3d.scene.add(hemi);
+  const key = new THREE.DirectionalLight(0xffffff, 2.2);
+  key.position.set(-4, 6, 7);
+  key.castShadow = true;
+  key.shadow.mapSize.set(2048, 2048);
+  webgl3d.scene.add(key);
+  const fill = new THREE.DirectionalLight(0xfff0dc, .75);
+  fill.position.set(5, 3, -4);
+  webgl3d.scene.add(fill);
+
+  const floor = new THREE.Mesh(
+    new THREE.PlaneGeometry(16, 11),
+    new THREE.MeshStandardMaterial({ color: 0x544c45, roughness: .92, metalness: 0 })
+  );
+  floor.rotation.x = -Math.PI / 2;
+  floor.position.y = -1.72;
+  floor.receiveShadow = true;
+  webgl3d.scene.add(floor);
+}
+
+function build3DModel() {
+  if (!webgl3d.scene) init3DRenderer();
+  if (webgl3d.group) webgl3d.scene.remove(webgl3d.group);
+  webgl3d.group = new THREE.Group();
+  webgl3d.group.rotation.x = THREE.MathUtils.degToRad(-58);
+  const pages = current3DPages();
+  if (pages.length === 1) {
+    addClosedBook(webgl3d.group, pages[0]);
+  } else {
+    addOpenBook(webgl3d.group, pages[0], pages[1]);
+  }
+  webgl3d.scene.add(webgl3d.group);
+}
+
+function resize3D() {
+  if (!webgl3d.renderer) return;
+  const host = document.getElementById('book3d');
+  const w = host.clientWidth, h = Math.max(1, host.clientHeight);
+  webgl3d.camera.aspect = w / h;
+  webgl3d.camera.updateProjectionMatrix();
+  webgl3d.renderer.setSize(w, h);
+}
+
+function animate3D() {
+  if (!window.view3D || !window.view3D.on || !webgl3d.renderer) return;
+  webgl3d.raf = requestAnimationFrame(animate3D);
+  webgl3d.controls.update();
+  webgl3d.renderer.render(webgl3d.scene, webgl3d.camera);
+}
+
+window.render3D = function () {
+  build3DModel();
+  resize3D();
+  if (!webgl3d.raf) animate3D();
+};
+
+window.open3D = function () {
+  if (window.stage.clientWidth < 815) return;
+  window.view3D.on = true;
+  document.documentElement.classList.add('view3d');
+  window.render3D();
+};
+
+window.close3D = function () {
+  window.view3D.on = false;
+  document.documentElement.classList.remove('view3d');
+  if (webgl3d.raf) cancelAnimationFrame(webgl3d.raf);
+  webgl3d.raf = 0;
+};
+
+window.toggle3D = function () {
+  window.view3D.on ? window.close3D() : window.open3D();
+};
+
+window.reset3D = function () {
+  if (!webgl3d.controls) return;
+  webgl3d.camera.position.set(5.8, 5.0, 7.6);
+  webgl3d.controls.target.set(0, -.15, 0);
+  webgl3d.controls.update();
+};
+
+window.addEventListener('resize', resize3D);
 </script>
 </body>
 </html>
