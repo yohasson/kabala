@@ -1715,44 +1715,59 @@ import { OrbitControls } from './vendor/OrbitControls.js';
 
 const webgl3d = {
   renderer: null, scene: null, camera: null, controls: null, group: null,
-  raf: 0, lastKey: ''
+  raf: 0, lastKey: '', textures: {}
 };
 
 function tex(url) {
+  if (webgl3d.textures[url]) return webgl3d.textures[url];
   const loader = new THREE.TextureLoader();
   const t = loader.load(url);
   t.colorSpace = THREE.SRGBColorSpace;
-  t.anisotropy = 8;
+  t.anisotropy = webgl3d.renderer ? webgl3d.renderer.capabilities.getMaxAnisotropy() : 8;
+  t.minFilter = THREE.LinearMipmapLinearFilter;
+  t.magFilter = THREE.LinearFilter;
+  webgl3d.textures[url] = t;
   return t;
 }
 
 function mat(color, roughness = .7) {
-  return new THREE.MeshStandardMaterial({ color, roughness, metalness: 0 });
+  return new THREE.MeshPhysicalMaterial({ color, roughness, metalness: 0, sheen: .12 });
 }
 
 function texturedMat(url, roughness = .62) {
-  return new THREE.MeshStandardMaterial({
+  return new THREE.MeshPhysicalMaterial({
     map: tex(url),
+    color: 0xffffff,
     roughness,
     metalness: 0,
+    sheen: .08,
+    emissive: 0xffffff,
+    emissiveIntensity: .08,
     side: THREE.FrontSide
   });
 }
 
-function pagePlane(url, x, yRot, z, sideName) {
-  const geo = new THREE.PlaneGeometry(4, 5.66, 32, 32);
+function pagePlane(url, x, sideName) {
+  const geo = new THREE.PlaneGeometry(4, 5.66, 96, 128);
   const pos = geo.attributes.position;
   for (let i = 0; i < pos.count; i++) {
     const px = pos.getX(i), py = pos.getY(i);
-    const edgeLift = Math.pow(Math.abs(px) / 2, 1.8) * .045;
-    const softSag = (1 - Math.pow(Math.abs(py) / 2.83, 2)) * -.025;
-    pos.setZ(i, edgeLift + softSag);
+    const u = (px + 2) / 4;
+    const fore = sideName === 'right-page' ? 1 - u : u;
+    const gutter = 1 - fore;
+    const v = 1 - Math.pow(Math.abs(py) / 2.83, 2);
+    const gutterDip = -0.055 * Math.exp(-Math.pow(gutter / 0.20, 2));
+    const softCrown = 0.030 * Math.sin(Math.PI * fore) * Math.max(0, v);
+    const foreCurl = 0.055 * Math.pow(fore, 3) * (0.35 + 0.65 * Math.max(0, v));
+    const cornerCurl = 0.030 * Math.pow(fore, 2.1) * Math.pow(Math.abs(py) / 2.83, 2);
+    pos.setZ(i, gutterDip + softCrown + foreCurl + cornerCurl);
   }
   pos.needsUpdate = true;
   geo.computeVertexNormals();
   const mesh = new THREE.Mesh(geo, texturedMat(url));
-  mesh.position.set(x, 0, z);
-  mesh.rotation.y = yRot;
+  mesh.position.set(x, .24, 0);
+  mesh.rotation.x = -Math.PI / 2;
+  mesh.rotation.z = sideName === 'right-page' ? THREE.MathUtils.degToRad(-1.2) : THREE.MathUtils.degToRad(1.2);
   mesh.castShadow = true;
   mesh.receiveShadow = true;
   mesh.name = sideName;
@@ -1760,61 +1775,65 @@ function pagePlane(url, x, yRot, z, sideName) {
 }
 
 function addPageEdges(group, width, height, depth, x) {
-  const edgeMat = new THREE.MeshStandardMaterial({
+  const edgeMat = new THREE.MeshPhysicalMaterial({
     color: 0xeee8dc,
-    roughness: .86,
+    roughness: .94,
     metalness: 0,
+    sheen: .1,
     bumpScale: .018
   });
-  const block = new THREE.Mesh(new THREE.BoxGeometry(width, height, depth), edgeMat);
-  block.position.set(x, 0, -depth / 2 - .04);
+  const block = new THREE.Mesh(new THREE.BoxGeometry(width, depth, height), edgeMat);
+  block.position.set(x, 0, 0);
   block.castShadow = true;
   block.receiveShadow = true;
   group.add(block);
 
-  // Fine paper lines on the fore-edge, enough to read as a real page block.
-  const lineMat = new THREE.LineBasicMaterial({ color: 0xcfc6b8, transparent: true, opacity: .48 });
+  // Fine paper lines on the near fore-edge, enough to read as a real page block.
+  const lineMat = new THREE.LineBasicMaterial({ color: 0xd7cfc2, transparent: true, opacity: .14 });
   const lines = new THREE.Group();
-  const count = 34;
+  const count = 52;
   for (let i = 0; i < count; i++) {
-    const yy = -height / 2 + (i + .5) * height / count;
+    const yy = -depth / 2 + (i + .5) * depth / count + (Math.sin(i * 12.989) * .0015);
     const g = new THREE.BufferGeometry().setFromPoints([
-      new THREE.Vector3(-width / 2, yy, depth / 2 + .003),
-      new THREE.Vector3(width / 2, yy, depth / 2 + .003)
+      new THREE.Vector3(-width / 2, yy, height / 2 + .012),
+      new THREE.Vector3(width / 2, yy, height / 2 + .012)
     ]);
     lines.add(new THREE.Line(g, lineMat));
   }
-  lines.position.set(x, 0, -depth - .08);
+  lines.position.set(x, 0, 0);
   group.add(lines);
   return block;
 }
 
 function addClosedBook(group, page) {
   addPageEdges(group, 4.12, 5.78, .48, 0);
-  const cover = new THREE.Mesh(new THREE.BoxGeometry(4.18, 5.84, .10), [
+  const cover = new THREE.Mesh(new THREE.BoxGeometry(4.18, .10, 5.84), [
     mat(0x17364c), mat(0x17364c), mat(0x17364c), mat(0x17364c), texturedMat(pageSrc(edition, page), .55), mat(0x183247)
   ]);
-  cover.position.z = .28;
+  cover.position.y = .30;
   cover.castShadow = true;
   cover.receiveShadow = true;
   group.add(cover);
 }
 
 function addOpenBook(group, rightPage, leftPage) {
-  addPageEdges(group, 8.28, 5.76, .38, 0);
-  const gutter = new THREE.Mesh(new THREE.BoxGeometry(.16, 5.86, .44), mat(0x6f6257, .82));
-  gutter.position.set(0, 0, .03);
-  gutter.castShadow = true;
-  gutter.receiveShadow = true;
-  group.add(gutter);
-
-  const right = pagePlane(pageSrc(edition, rightPage), -2.02, THREE.MathUtils.degToRad(3.5), .27, 'right-page');
-  const left = pagePlane(pageSrc(edition, leftPage), 2.02, THREE.MathUtils.degToRad(-3.5), .27, 'left-page');
+  const boardMat = mat(0x17364c, .88);
+  const rightBoard = new THREE.Mesh(new THREE.BoxGeometry(4.00, .035, 5.70), boardMat);
+  rightBoard.position.set(-2.005, -.205, .015);
+  rightBoard.castShadow = true; rightBoard.receiveShadow = true;
+  const leftBoard = rightBoard.clone();
+  leftBoard.position.x = 2.01;
+  group.add(rightBoard, leftBoard);
+  addPageEdges(group, 3.98, 5.60, .26, -2.01);
+  addPageEdges(group, 3.98, 5.60, .26, 2.01);
+  const right = pagePlane(pageSrc(edition, rightPage), -2.005, 'right-page');
+  const left = pagePlane(pageSrc(edition, leftPage), 2.005, 'left-page');
   group.add(right, left);
 
-  const creaseMat = new THREE.MeshStandardMaterial({ color: 0x000000, transparent: true, opacity: .18, roughness: 1 });
-  const crease = new THREE.Mesh(new THREE.BoxGeometry(.035, 5.72, .012), creaseMat);
-  crease.position.set(0, 0, .31);
+  const creaseMat = new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: .08, depthWrite: false });
+  const crease = new THREE.Mesh(new THREE.PlaneGeometry(.18, 5.68), creaseMat);
+  crease.rotation.x = -Math.PI / 2;
+  crease.position.set(0, .262, 0);
   group.add(crease);
 }
 
@@ -1832,13 +1851,15 @@ function init3DRenderer() {
   webgl3d.scene = new THREE.Scene();
   webgl3d.scene.background = null;
 
-  webgl3d.camera = new THREE.PerspectiveCamera(38, host.clientWidth / Math.max(1, host.clientHeight), .1, 100);
-  webgl3d.camera.position.set(5.8, 5.0, 7.6);
+  webgl3d.camera = new THREE.PerspectiveCamera(34, host.clientWidth / Math.max(1, host.clientHeight), .1, 100);
+  webgl3d.camera.position.set(4.9, 4.9, 7.9);
 
   webgl3d.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
   webgl3d.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
   webgl3d.renderer.setSize(host.clientWidth, host.clientHeight);
   webgl3d.renderer.outputColorSpace = THREE.SRGBColorSpace;
+  webgl3d.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  webgl3d.renderer.toneMappingExposure = 1.28;
   webgl3d.renderer.shadowMap.enabled = true;
   webgl3d.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   host.appendChild(webgl3d.renderer.domElement);
@@ -1847,27 +1868,30 @@ function init3DRenderer() {
   webgl3d.controls.enablePan = false;
   webgl3d.controls.enableDamping = true;
   webgl3d.controls.dampingFactor = .08;
-  webgl3d.controls.minDistance = 5.5;
-  webgl3d.controls.maxDistance = 14;
-  webgl3d.controls.target.set(0, -.15, 0);
+  webgl3d.controls.minDistance = 6.0;
+  webgl3d.controls.maxDistance = 10.8;
+  webgl3d.controls.minPolarAngle = THREE.MathUtils.degToRad(30);
+  webgl3d.controls.maxPolarAngle = THREE.MathUtils.degToRad(72);
+  webgl3d.controls.target.set(0, .05, 0);
 
-  const hemi = new THREE.HemisphereLight(0xffffff, 0x3b2f26, 1.35);
+  const hemi = new THREE.HemisphereLight(0xfff7ee, 0x2a211b, .72);
   webgl3d.scene.add(hemi);
-  const key = new THREE.DirectionalLight(0xffffff, 2.2);
-  key.position.set(-4, 6, 7);
+  const key = new THREE.SpotLight(0xfff1dd, 5.8, 18, Math.PI / 4.6, .82, 1.5);
+  key.position.set(-4.2, 7.2, 5.8);
   key.castShadow = true;
-  key.shadow.mapSize.set(2048, 2048);
+  key.shadow.mapSize.set(4096, 4096);
+  key.shadow.radius = 6;
   webgl3d.scene.add(key);
-  const fill = new THREE.DirectionalLight(0xfff0dc, .75);
-  fill.position.set(5, 3, -4);
+  const fill = new THREE.DirectionalLight(0xe8efff, .55);
+  fill.position.set(5, 2.4, -4);
   webgl3d.scene.add(fill);
 
   const floor = new THREE.Mesh(
-    new THREE.PlaneGeometry(16, 11),
-    new THREE.MeshStandardMaterial({ color: 0x544c45, roughness: .92, metalness: 0 })
+    new THREE.PlaneGeometry(24, 16),
+    new THREE.ShadowMaterial({ color: 0x000000, opacity: .22 })
   );
   floor.rotation.x = -Math.PI / 2;
-  floor.position.y = -1.72;
+  floor.position.y = -.32;
   floor.receiveShadow = true;
   webgl3d.scene.add(floor);
 }
@@ -1876,7 +1900,6 @@ function build3DModel() {
   if (!webgl3d.scene) init3DRenderer();
   if (webgl3d.group) webgl3d.scene.remove(webgl3d.group);
   webgl3d.group = new THREE.Group();
-  webgl3d.group.rotation.x = THREE.MathUtils.degToRad(-58);
   const pages = current3DPages();
   if (pages.length === 1) {
     addClosedBook(webgl3d.group, pages[0]);
@@ -1928,8 +1951,8 @@ window.toggle3D = function () {
 
 window.reset3D = function () {
   if (!webgl3d.controls) return;
-  webgl3d.camera.position.set(5.8, 5.0, 7.6);
-  webgl3d.controls.target.set(0, -.15, 0);
+  webgl3d.camera.position.set(4.9, 4.9, 7.9);
+  webgl3d.controls.target.set(0, .05, 0);
   webgl3d.controls.update();
 };
 
