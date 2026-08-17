@@ -629,7 +629,7 @@
     <button id="spineClose" onclick="closeSpine()" title="סגור" aria-label="סגור">
       <svg viewBox="0 0 24 24" width="18" height="18"><path d="M6 6l12 12M18 6 6 18"/></svg>
     </button>
-    <div id="spineStage"><img id="spineImg" src="images/spines/woodfree180gsm_hardcover.png?v=3" alt="שדרת הספר"/></div>
+    <div id="spineStage"><img id="spineImg" src="images/spines/woodfree180gsm_hardcover.png?v=4" alt="שדרת הספר"/></div>
     <div id="spineControls">
       <div id="spineTypeSel" class="spine-seg">
         <button type="button" class="spine-seg-btn on" data-type="hardcover" onclick="setSpineType('hardcover')">כריכה קשה</button>
@@ -1539,7 +1539,7 @@ function renderSpine() {
   var paper = document.getElementById('spinePaperSel').value;
   var info = SPINE_PAPER_MM[paper];
   var img = document.getElementById('spineImg');
-  img.src = 'images/spines/' + paper + '_' + spineType + '.png?v=3';
+  img.src = 'images/spines/' + paper + '_' + spineType + '.png?v=4';
   var typeHeb = spineType === 'hardcover' ? 'כריכה קשה' : 'כריכה רכה';
   var mm = info[spineType];
   document.getElementById('spineCaption').textContent =
