@@ -1,7 +1,7 @@
 [
   {
     "paper": "woodfree170gsm",
-    "heb": "נטול עץ 170 ג'",
+    "heb": "נייר נטול עץ 170 ג'",
     "soft_mm": 9.6,
     "hard_mm": 14.6,
     "soft_img": "images/spines/woodfree170gsm_softcover.png",
@@ -17,7 +17,7 @@
   },
   {
     "paper": "woodfree180gsm",
-    "heb": "נטול עץ 180 ג'",
+    "heb": "נייר נטול עץ 180 ג'",
     "soft_mm": 10.1,
     "hard_mm": 15.1,
     "soft_img": "images/spines/woodfree180gsm_softcover.png",
@@ -33,7 +33,7 @@
   },
   {
     "paper": "chromo180gsm",
-    "heb": "כרומו 180 ג'",
+    "heb": "נייר כרומו מבריק 180 ג'",
     "soft_mm": 7.2,
     "hard_mm": 12.2,
     "soft_img": "images/spines/chromo180gsm_softcover.png",
@@ -49,7 +49,7 @@
   },
   {
     "paper": "chromo200gsm",
-    "heb": "כרומו 200 ג'",
+    "heb": "נייר כרומו מבריק 200 ג'",
     "soft_mm": 8.2,
     "hard_mm": 13.2,
     "soft_img": "images/spines/chromo200gsm_softcover.png",
