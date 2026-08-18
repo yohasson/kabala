@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>הולך בדרכי — מרכז שיתוף</title>
+<style>
+  :root{
+    --paper:#f6ecd4; --ink:#20303a; --muted:#6a7780;
+    --accent:#2f5c6e; --line:rgba(0,0,0,.10); --card:#fff;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; font-family:"Segoe UI",Arial,"Noto Sans Hebrew",sans-serif;
+    background:linear-gradient(180deg,#eef1f3,#e3e7ea); color:var(--ink);
+    min-height:100vh; padding:28px 16px 56px;
+  }
+  .wrap{max-width:760px; margin:0 auto}
+  header{text-align:center; margin-bottom:26px}
+  header h1{margin:0 0 6px; font-size:2rem; color:var(--accent)}
+  header p{margin:0; color:var(--muted)}
+  .hero{
+    display:block; width:100%; max-width:320px; margin:18px auto 0;
+    border-radius:8px; box-shadow:0 10px 30px rgba(0,0,0,.18);
+  }
+  .cta{
+    display:flex; align-items:center; justify-content:center; gap:10px;
+    margin:26px auto; max-width:420px; padding:16px 20px; text-decoration:none;
+    background:var(--accent); color:#fff; border-radius:12px; font-size:1.15rem;
+    font-weight:600; box-shadow:0 8px 24px rgba(47,92,110,.35);
+  }
+  .cta:hover{filter:brightness(1.06)}
+  .grid{display:grid; gap:14px}
+  .card{
+    background:var(--card); border:1px solid var(--line); border-radius:12px;
+    padding:16px 18px; text-decoration:none; color:inherit; display:block;
+    box-shadow:0 2px 10px rgba(0,0,0,.05); transition:transform .12s, box-shadow .12s;
+  }
+  .card:hover{transform:translateY(-2px); box-shadow:0 8px 22px rgba(0,0,0,.10)}
+  .card .t{font-size:1.1rem; font-weight:600; color:var(--accent); margin-bottom:3px}
+  .card .d{color:var(--muted); font-size:.92rem}
+  .sec{margin:30px 0 12px; font-size:.85rem; letter-spacing:.06em;
+       text-transform:uppercase; color:var(--muted); text-align:center}
+  footer{text-align:center; margin-top:40px; color:var(--muted); font-size:.82rem}
+  @media (max-width:520px){ header h1{font-size:1.6rem} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>הולך בדרכי</h1>
+    <p>סיפור חיים · יעקב קבלה</p>
+  </header>
+
+  <a class="cta" href="https://yohasson.github.io/kabala/" target="_blank" rel="noopener">
+    📖 לקריאת הספר הדיגיטלי
+  </a>
+
+  <div class="sec">קבצים להורדה — Google Drive</div>
+  <div class="grid">
+    <a class="card" href="https://drive.google.com/drive/folders/1nrTRM8gf5sj8NrMGPWDKHjMbNkD0hR4K" target="_blank" rel="noopener">
+      <div class="t">📁 תיקיית המאסטר המלאה</div>
+      <div class="d">כל קבצי ההפקה במקום אחד</div>
+    </a>
+    <a class="card" href="https://drive.google.com/drive/folders/1j7HWVXe85DTzHpYrcWj7jh1Ga3L89_Wu" target="_blank" rel="noopener">
+      <div class="t">📄 01 · פנים הספר (הדפסה)</div>
+      <div class="d">מהדורה אחת · 96 עמ' · A5 · CMYK · PDF/X-1a · גרסת bleed+cropmarks וגרסת trim</div>
+    </a>
+    <a class="card" href="https://drive.google.com/drive/folders/1mcsI7GADeyXJd2fsF6CXSlG8VuwkUQdM" target="_blank" rel="noopener">
+      <div class="t">🎨 02 · כריכות</div>
+      <div class="d">4 סוגי נייר (chromo 180/200, woodfree 170/180) · רך וקשה · PDF + PNG 300dpi</div>
+    </a>
+    <a class="card" href="https://drive.google.com/drive/folders/1qXKcXrxKroHrxZDtOR8Kw2VjLyiawIP1" target="_blank" rel="noopener">
+      <div class="t">✏️ 03 · מקורות לעריכה</div>
+      <div class="d">פנים (DOCX) · מקור לעריכה, מהדורה אחת</div>
+    </a>
+    <a class="card" href="https://drive.google.com/drive/folders/1mDSa_P3u5RZHuo_2HJlXuzmKES_Mt6X1" target="_blank" rel="noopener">
+      <div class="t">🖼️ תצוגות מקדימות</div>
+      <div class="d">תמונת נושא של הכריכה</div>
+    </a>
+  </div>
+
+  <footer>
+    הקישורים פתוחים לכל מי שברשותו הקישור (צפייה בלבד).
+  </footer>
+</div>
+</body>
+</html>
