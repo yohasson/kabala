@@ -42,6 +42,32 @@
   .sec{margin:30px 0 12px; font-size:.85rem; letter-spacing:.06em;
        text-transform:uppercase; color:var(--muted); text-align:center}
   footer{text-align:center; margin-top:40px; color:var(--muted); font-size:.82rem}
+  .feat{
+    background:linear-gradient(180deg,#ffffff,#f5f8f9); border:1px solid var(--line);
+    border-radius:14px; padding:20px 18px; margin:16px 0; box-shadow:0 4px 16px rgba(0,0,0,.06);
+  }
+  .feat h3{margin:0 0 4px; color:var(--accent); font-size:1.15rem}
+  .feat p.sub{margin:0 0 14px; color:var(--muted); font-size:.9rem}
+  .step{display:flex; gap:10px; align-items:flex-start; margin:10px 0; font-size:.92rem}
+  .step .num{flex:0 0 24px; height:24px; border-radius:50%; background:var(--accent); color:#fff;
+    display:flex; align-items:center; justify-content:center; font-size:.8rem; font-weight:700}
+  .btn{display:inline-flex; align-items:center; gap:8px; justify-content:center; width:100%;
+    padding:13px 16px; border-radius:10px; border:0; cursor:pointer; font-size:1rem; font-weight:600;
+    text-decoration:none; margin-top:6px}
+  .btn.primary{background:var(--accent); color:#fff}
+  .btn.ghost{background:#eaf0f2; color:var(--accent); border:1px solid var(--line)}
+  .btn:hover{filter:brightness(1.05)}
+  textarea.chat{width:100%; min-height:90px; border:1px solid var(--line); border-radius:10px;
+    padding:12px; font:inherit; font-size:.95rem; resize:vertical; direction:rtl; box-sizing:border-box}
+  .vlist a.vrow{display:flex; align-items:center; gap:10px; background:var(--card);
+    border:1px solid var(--line); border-radius:10px; padding:12px 14px; margin:8px 0;
+    text-decoration:none; color:inherit}
+  .vlist a.vrow:hover{box-shadow:0 4px 12px rgba(0,0,0,.08)}
+  .vlist .vt{font-weight:600; color:var(--accent)}
+  .vlist .vd{color:var(--muted); font-size:.82rem}
+  .vlist .badge{margin-inline-start:auto; font-size:.72rem; background:#eaf0f2; color:var(--accent);
+    padding:3px 9px; border-radius:10px}
+  .note{font-size:.8rem; color:var(--muted); margin-top:8px; line-height:1.5}
   details.spec{
     background:var(--card); border:1px solid var(--line); border-radius:12px;
     margin:14px 0; padding:0; box-shadow:0 2px 10px rgba(0,0,0,.05); overflow:hidden;
@@ -147,9 +173,75 @@
     </a></div>
   </details>
 
+  <div class="sec">גרסאות הספר</div>
+  <div class="vlist" id="versionList">
+    <a class="vrow" href="https://yohasson.github.io/kabala/" target="_blank" rel="noopener">
+      <div><div class="vt">📖 המהדורה המקורית</div><div class="vd">הגרסה הרשמית — לעולם אינה משתנה</div></div>
+      <span class="badge">מקור</span>
+    </a>
+  </div>
+
+  <div class="sec">יצירת גרסה חדשה (לבני המשפחה)</div>
+
+  <div class="feat">
+    <h3>✍️ אפשרות א' — עריכה ישירה ב-Word</h3>
+    <p class="sub">הורידו עותק, ערכו אותו, והעלו — וכל הקבצים (הדפסה + ספר דיגיטלי) ייווצרו אוטומטית כגרסה חדשה ונפרדת.</p>
+    <div class="step"><span class="num">1</span><div>הורידו עותק של קובץ המקור לעריכה.</div></div>
+    <div class="step"><span class="num">2</span><div>ערכו אותו ב-Word (הטקסט, לא העיצוב).</div></div>
+    <div class="step"><span class="num">3</span><div>העלו את הקובץ הערוך לתיקיית ה-INBOX. תוך מספר דקות תיווצר גרסה חדשה שתופיע ברשימת הגרסאות למעלה.</div></div>
+    <a class="btn ghost" href="https://drive.google.com/drive/folders/1qXKcXrxKroHrxZDtOR8Kw2VjLyiawIP1" target="_blank" rel="noopener">⬇️ הורדת עותק לעריכה</a>
+    <a class="btn primary" href="#" id="inboxLink" target="_blank" rel="noopener">⬆️ העלאת הקובץ הערוך (INBOX)</a>
+    <div class="note">הגרסה המקורית נשמרת תמיד כפי שהיא. כל עריכה יוצרת גרסה נוספת בלבד.</div>
+  </div>
+
+  <div class="feat">
+    <h3>💬 אפשרות ב' — בקשת שינוי בכתיבה חופשית</h3>
+    <p class="sub">כתבו במילים שלכם מה תרצו לשנות (למשל: «בעמוד 12 יש לתקן שם», «לשנות את ההקדשה ל...»). נטפל בבקשה וניצור גרסה חדשה.</p>
+    <textarea class="chat" id="chatReq" placeholder="לדוגמה: בעמוד 44 יש טעות כתיב במילה... נא לתקן ל..."></textarea>
+    <input id="reqName" class="chat" style="min-height:auto;height:42px;margin-top:8px" placeholder="השם שלך (לא חובה)"/>
+    <button class="btn primary" id="sendReq">שליחת הבקשה</button>
+    <div class="note" id="reqStatus">הבקשה תישלח לתיקיית ה-INBOX ותטופל תוך זמן קצר. הגרסה החדשה תופיע ברשימה למעלה.</div>
+  </div>
+
   <footer>
-    הקישורים פתוחים לכל מי שברשותו הקישור (צפייה בלבד).
+    הקישורים פתוחים לכל מי שברשותו הקישור. הגרסה המקורית לעולם אינה משתנה.
   </footer>
 </div>
+
+<script>
+// INBOX folder link (family upload target)
+var INBOX_URL = "https://drive.google.com/drive/folders/1JIBzUF9HLvMSSDOjF74FABQJJGR5jPph";
+document.getElementById('inboxLink').href = INBOX_URL;
+
+// Load version registry
+fetch('../versions.json?ts=' + Date.now()).then(function(r){ return r.ok ? r.json() : []; })
+  .then(function(list){
+    if(!Array.isArray(list) || !list.length) return;
+    var el = document.getElementById('versionList');
+    el.innerHTML = '';
+    list.forEach(function(v){
+      var a = document.createElement('a');
+      a.className = 'vrow'; a.href = v.flipbookUrl; a.target = '_blank'; a.rel='noopener';
+      var isOrig = v.id === 'original';
+      a.innerHTML = '<div><div class="vt">'+(isOrig?'📖 ':'📗 ')+
+        (v.label||v.id)+'</div><div class="vd">'+
+        (isOrig?'הגרסה הרשמית — לעולם אינה משתנה':('נוצר: '+(v.created||'')+(v.pages?(' · '+v.pages+' עמ\\''):'')))+
+        '</div></div><span class="badge">'+(isOrig?'מקור':'גרסה')+'</span>';
+      el.appendChild(a);
+    });
+  }).catch(function(){});
+
+// Chat request -> opens a prefilled email/Drive note (client cannot write Drive directly;
+// we hand off via a mailto so the request reaches the pipeline owner + inbox flow).
+document.getElementById('sendReq').addEventListener('click', function(){
+  var txt = document.getElementById('chatReq').value.trim();
+  var who = document.getElementById('reqName').value.trim();
+  if(!txt){ document.getElementById('reqStatus').textContent = 'נא לכתוב את הבקשה תחילה.'; return; }
+  var body = encodeURIComponent('בקשת שינוי לספר «הולך בדרכי»\n\nמאת: '+(who||'—')+'\n\n'+txt);
+  window.location.href = 'mailto:yossihasson1@gmail.com?subject=' +
+    encodeURIComponent('בקשת שינוי לספר הולך בדרכי') + '&body=' + body;
+  document.getElementById('reqStatus').textContent = 'נפתחה הודעת דוא"ל עם הבקשה — נא לשלוח אותה. נטפל בה ותיווצר גרסה חדשה.';
+});
+</script>
 </body>
 </html>
