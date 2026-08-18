@@ -1,0 +1,19 @@
+[
+  {
+    "id": "original",
+    "label": "המהדורה המקורית",
+    "created": "",
+    "flipbookUrl": "https://yohasson.github.io/kabala/",
+    "driveFolder": "01_interior_print",
+    "note": "מקור - לא לשינוי"
+  },
+  {
+    "id": "20260818-0201-בדיקה-ראשונה",
+    "label": "בדיקה ראשונה",
+    "created": "2026-08-18 02:02",
+    "flipbookUrl": "https://yohasson.github.io/kabala/v/20260818-0201-בדיקה-ראשונה/",
+    "driveFolder": "05_versions/20260818-0201-בדיקה-ראשונה",
+    "pages": 96,
+    "note": ""
+  }
+]
