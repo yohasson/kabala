@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>הולך בדרכי — טיזר קולנועי</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#080b10;color:#f7edda;font-family:Georgia,"Times New Roman",serif}
+main{min-height:100svh;display:grid;grid-template-rows:1fr auto}
+#screen{position:relative;overflow:hidden;min-height:75svh;display:grid;place-items:center;isolation:isolate;background:#101924}
+#sky{position:absolute;inset:-10%;z-index:-3;background:radial-gradient(ellipse at 65% 65%,#ad794c 0%,#2c394b 40%,#080b10 75%);transition:filter 3s}
+#sun{position:absolute;top:25%;left:25%;width:12vmin;height:12vmin;background:#e8bf80;border-radius:50%;box-shadow:0 0 100px #e3aa6666;z-index:-2}
+#land{position:absolute;inset:55% -10% -15%;background:#111a20;clip-path:polygon(0 40%,18% 9%,32% 30%,48% 0,65% 28%,82% 4%,100% 35%,100% 100%,0 100%);z-index:-1}
+#road{position:absolute;inset:60% 0 0;background:linear-gradient(#c79d6444,#e8bf8088);clip-path:polygon(50% 0,51% 0,72% 100%,28% 100%);z-index:-1}
+#screen::after{content:"";position:absolute;inset:0;pointer-events:none;box-shadow:inset 0 0 15vmin 5vmin #0008}
+.label{position:absolute;top:24px;right:24px;left:24px;font:12px system-ui;letter-spacing:.12em;color:#eadfc399}
+#caption{width:min(88%,960px);text-align:center;text-shadow:0 3px 24px #000}
+#eyebrow{font:clamp(14px,2vw,20px) system-ui;color:#edcb8c;letter-spacing:.12em}
+h1{font-size:clamp(36px,7vw,88px);font-weight:normal;line-height:1.15;margin:22px 0}
+#detail{font-size:clamp(19px,3vw,32px);line-height:1.6;margin:0}
+footer{padding:18px max(20px,5vw);background:#080b10;z-index:2}
+.controls{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+button,a{font:15px system-ui;color:#f7edda}
+button{cursor:pointer;border:1px solid #b69a65;border-radius:5px;padding:10px 18px;background:#24252a}
+button:hover{background:#3b3630}
+button:focus-visible,a:focus-visible{outline:3px solid #edcb8c;outline-offset:4px}
+a{margin-inline-start:auto}
+progress{width:100%;height:4px;display:block;margin-bottom:16px;accent-color:#edcb8c}
+#clock{font:14px monospace;direction:ltr}
+.note{font:12px/1.6 system-ui;color:#a9a6a0;margin:12px 0 0}
+@media(prefers-reduced-motion:reduce){#sky{transition:none}}
+</style>
+</head>
+<body>
+<main>
+  <section id="screen" aria-label="טיזר קולנועי מונפש">
+    <div id="sky"></div><div id="sun"></div><div id="land"></div><div id="road"></div>
+    <div class="label">טיזר קונספט מקורי · בהשראת נושאי ספר הזיכרונות של יעקב קבלה</div>
+    <div id="caption">
+      <div id="eyebrow">מסע של חיים שלמים</div>
+      <h1 id="title">הולך בדרכי</h1>
+      <p id="detail">מקום אחד שממנו יוצאים. דרך שלמה שהופכת לבית.</p>
+    </div>
+  </section>
+  <footer>
+    <progress id="progress" max="120" value="0" aria-label="התקדמות הטיזר"></progress>
+    <div class="controls">
+      <button id="play" type="button">▶ ניגון הטיזר</button>
+      <button id="restart" type="button">מהתחלה</button>
+      <button id="sound" type="button" aria-pressed="false">צליל: כבוי</button>
+      <span id="clock">0:00 / 2:00</span>
+      <a href="./">לקריאת הספר</a>
+    </div>
+    <p class="note">120 שניות · כותרות ומוזיקה מקוריות · המחשה חזותית מופשטת, ללא צילומי סרט או ציטוטים מהספר. זהו טיזר קונספט, לא הכרזה על סרט בהפקה.</p>
+  </footer>
+</main>
+<script>
+'use strict';
+const scenes = [
+  [0, 'לפני שהדרך מתחילה', 'יש מקום שקוראים לו בית', 'ילדות. משפחה. קהילה. עולם שלם בזיכרון.', 0],
+  [12, 'השורשים', 'מה לוקחים כשעוזבים?', 'את הקולות. את הפנים. את מה שלא נכנס למזוודה.', 15],
+  [24, 'כשהעולם שבחוץ משתנה', 'לא תמיד אפשר להישאר', 'מול גילויי אנטישמיות — המבט פונה אל אופק אחר.', -25],
+  [36, 'העלייה לארץ ישראל', 'בין מה שהיה למה שיהיה', 'להיפרד מהמוכר. לצאת לדרך. להתחיל מחדש.', 155],
+  [50, 'המעברה בכפר יבנה', 'להגיע — זו רק ההתחלה', 'עכשיו צריך לבנות חיים.', 20],
+  [64, 'עבודה. צבא. חלוציות.', 'בית לא נבנה ביום', 'צעד אחרי צעד. בידיים. בהחלטות. בהתמדה.', -10],
+  [78, 'מרים · משפחה · אמונה', 'ולא הולכים לבד', 'בתוך סיפור החיים, יש גם מקום לאהבה.', 325],
+  [92, 'המבט תמיד קדימה', 'מה עוד אפשר לפתח?', 'מהשורשים שנשארו בזיכרון — אל מה שעוד אפשר להצמיח.', 25],
+  [104, 'סיפור חייו של יעקב קבלה', 'הולך בדרכי', 'אדם אחד. דרך משלו. סיפור שעובר לדור הבא.', 0],
+  [115, 'המסע ממשיך בין הדפים', 'הולך בדרכי', 'לקריאת הספר — הקישור למטה', 0]
+];
+const el = id => document.getElementById(id);
+const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+let elapsed = 0, started = 0, running = false, frame = 0, sceneIndex = -1;
+let audio, master, voices = [], soundEnabled = false;
+function silence() {
+  for (const voice of voices) voice.stop();
+  voices = [];
+}
+function chord(index) {
+  silence();
+  if (!audio || !soundEnabled || !running) return;
+  const roots = [130.81, 110, 87.31, 98, 130.81, 110, 174.61, 146.83, 130.81, 130.81];
+  for (const ratio of [1, 1.5, 2, 2.5]) {
+    const voice = audio.createOscillator();
+    const envelope = audio.createGain();
+    voice.type = 'sine';
+    voice.frequency.value = roots[index] * ratio;
+    envelope.gain.setValueAtTime(0, audio.currentTime);
+    envelope.gain.linearRampToValueAtTime(0.045, audio.currentTime + 1.5);
+    envelope.gain.linearRampToValueAtTime(0.015, audio.currentTime + 5);
+    voice.connect(envelope).connect(master);
+    voice.onended = () => { voice.disconnect(); envelope.disconnect(); };
+    voice.start();
+    voices.push(voice);
+  }
+}
+function render(time) {
+  const index = scenes.findLastIndex(scene => time >= scene[0]);
+  const scene = scenes[index];
+  if (index !== sceneIndex) {
+    sceneIndex = index;
+    el('eyebrow').textContent = scene[1];
+    el('title').textContent = scene[2];
+    el('detail').textContent = scene[3];
+    el('sky').style.filter = `hue-rotate(${scene[4]}deg)`;
+    chord(index);
+  }
+  const end = index + 1 < scenes.length ? scenes[index + 1][0] : 120;
+  const local = time - scene[0];
+  el('caption').style.opacity = reducedMotion ? 1 : Math.min(1, local / 1.5, (end - time) / 1.2);
+  if (!reducedMotion) {
+    el('sky').style.transform = `scale(${1 + time / 900}) rotate(${time / 100}deg)`;
+    el('sun').style.transform = `translate(${time / 5}px,${-time / 6}px)`;
+    el('caption').style.transform = `translateY(${Math.max(0, 12 - local * 4)}px)`;
+  }
+  el('progress').value = time;
+  el('clock').textContent = `${Math.floor(time / 60)}:${String(Math.floor(time % 60)).padStart(2, '0')} / 2:00`;
+}
+function tick(now) {
+  elapsed = Math.min(120, (now - started) / 1000);
+  render(elapsed);
+  if (elapsed < 120) frame = requestAnimationFrame(tick);
+  else {
+    running = false;
+    silence();
+    el('caption').style.opacity = 1;
+    el('play').textContent = '↻ ניגון חוזר';
+  }
+}
+function pause() {
+  if (!running) return;
+  elapsed = Math.min(120, (performance.now() - started) / 1000);
+  running = false;
+  cancelAnimationFrame(frame);
+  silence();
+  el('play').textContent = '▶ המשך';
+}
+function play() {
+  if (elapsed >= 120) { elapsed = 0; sceneIndex = -1; }
+  running = true;
+  started = performance.now() - elapsed * 1000;
+  if (audio && soundEnabled) audio.resume().catch(() => {});
+  render(elapsed);
+  chord(sceneIndex);
+  el('play').textContent = '⏸ השהיה';
+  frame = requestAnimationFrame(tick);
+}
+el('play').addEventListener('click', () => running ? pause() : play());
+el('restart').addEventListener('click', () => {
+  pause();
+  elapsed = 0;
+  sceneIndex = -1;
+  play();
+});
+el('sound').addEventListener('click', async () => {
+  try {
+    if (!audio) {
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      audio = new AudioContext();
+      master = audio.createGain();
+      master.gain.value = 0.6;
+      master.connect(audio.destination);
+    }
+    soundEnabled = !soundEnabled;
+    el('sound').setAttribute('aria-pressed', String(soundEnabled));
+    el('sound').textContent = soundEnabled ? 'צליל: פועל' : 'צליל: כבוי';
+    if (soundEnabled) { await audio.resume(); chord(Math.max(0, sceneIndex)); }
+    else silence();
+  } catch {
+    soundEnabled = false;
+    silence();
+    el('sound').setAttribute('aria-pressed', 'false');
+    el('sound').textContent = 'הצליל אינו זמין';
+  }
+});
+document.addEventListener('visibilitychange', () => { if (document.hidden) pause(); });
+</script>
+</body>
+</html>
