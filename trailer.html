@@ -96,7 +96,8 @@ function chord(index) {
   }
 }
 function render(time) {
-  const index = scenes.findLastIndex(scene => time >= scene[0]);
+  let index = scenes.length - 1;
+  while (index > 0 && time < scenes[index][0]) index--;
   const scene = scenes[index];
   if (index !== sceneIndex) {
     sceneIndex = index;
@@ -141,8 +142,9 @@ function play() {
   running = true;
   started = performance.now() - elapsed * 1000;
   if (audio && soundEnabled) audio.resume().catch(() => {});
+  const previousScene = sceneIndex;
   render(elapsed);
-  chord(sceneIndex);
+  if (sceneIndex === previousScene) chord(sceneIndex);
   el('play').textContent = '⏸ השהיה';
   frame = requestAnimationFrame(tick);
 }
