@@ -15,6 +15,10 @@ A 3D page-turning web edition of a Hebrew family memoir.
 - Two editions: standard (68 pp) and large print (84 pp, 14 pt)
 - Hebrew UI: next / previous page, page counter, fullscreen
 - Keyboard: `→` back, `←` forward, `F` fullscreen
+- Live reading progress: the current chapter and percentage appear above the
+  right-to-left scrubber, with a filled track and descriptive screen-reader
+  value. Progress follows the source pages across mobile and desktop, from
+  0% at the front cover to 100% at the final spread.
 - Resume reading: returning visitors see a Hebrew card with their last page
   preview and a one-click return to it. The reader still opens at the cover.
   Reading position stays in this browser only; no account or server is used.

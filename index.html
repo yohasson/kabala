@@ -444,12 +444,19 @@
   #nav{display:flex;align-items:center;gap:.1rem;background:#fff;border-radius:10px;
        padding:.24rem;box-shadow:0 1px 4px rgba(0,0,0,.14)}
   #counter{display:none}
+  #readingTrack{width:min(46vw,520px);min-width:0;--track:#c9c9c9;--ink:#4d4d4d}
+  #readingContext{display:flex;gap:.6rem;justify-content:space-between;
+    font-size:.75rem;line-height:1.5;color:var(--ink)}
+  #readingChapter{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  #readingPercent{flex-shrink:0;font-variant-numeric:tabular-nums}
   #scrub{
     -webkit-appearance:none;appearance:none;background:transparent;
-    width:min(46vw,520px);height:24px;margin:0;direction:rtl;cursor:pointer;
+    width:100%;height:24px;margin:0;direction:rtl;cursor:pointer;
   }
-  #scrub::-webkit-slider-runnable-track{height:6px;border-radius:3px;background:#c9c9c9}
-  #scrub::-moz-range-track{height:6px;border-radius:3px;background:#c9c9c9}
+  #scrub::-webkit-slider-runnable-track{height:6px;border-radius:3px;
+    background:linear-gradient(to left,var(--ink) var(--progress,0%),var(--track) var(--progress,0%))}
+  #scrub::-moz-range-track{height:6px;border-radius:3px;
+    background:linear-gradient(to left,var(--ink) var(--progress,0%),var(--track) var(--progress,0%))}
   #scrub::-webkit-slider-thumb{
     -webkit-appearance:none;appearance:none;width:52px;height:10px;border-radius:5px;
     background:#4d4d4d;border:0;margin-top:-2px;box-shadow:0 1px 3px rgba(0,0,0,.28);
@@ -459,6 +466,7 @@
     box-shadow:0 1px 3px rgba(0,0,0,.28);
   }
   #scrub:focus{outline:none}
+  #scrub:focus-visible{outline:2px solid var(--ink);outline-offset:3px;border-radius:4px}
 
   /* Scrub preview: Heyzine shows the destination spread as two thumbnails above
      the slider while you drag. Sizes are theirs, mirrored for an RTL book. */
@@ -535,8 +543,7 @@
   html.dark .edgebtn:active{color:#fff}
   html.dark #nav{background:#242424;box-shadow:0 1px 4px rgba(0,0,0,.4)}
   html.dark #counter{color:#bbb}
-  html.dark #scrub::-webkit-slider-runnable-track{background:#4a4a4a}
-  html.dark #scrub::-moz-range-track{background:#4a4a4a}
+  html.dark #readingTrack{--track:#4a4a4a;--ink:#d8d8d8}
   html.dark #scrub::-webkit-slider-thumb{background:#d8d8d8;box-shadow:0 1px 3px rgba(0,0,0,.5)}
   html.dark #scrub::-moz-range-thumb{background:#d8d8d8;box-shadow:0 1px 3px rgba(0,0,0,.5)}
   html.dark #load{background:linear-gradient(135deg,#242424,#161616)}
@@ -566,7 +573,7 @@
     #stage{inset:54px 0 56px 0;padding:4px}
     #bottom{height:56px;gap:.3rem}
     #counter{min-width:6.2rem;font-size:.7rem}
-    #scrub{width:34vw}
+    #readingTrack{width:52vw}
   }
   @media (max-width:520px){
     #titlecard{max-width:none}
@@ -724,7 +731,13 @@
       <svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg>
     </button>
   </div>
-  <input id="scrub" type="range" min="1" max="1" value="1" step="1" aria-label="מעבר לעמוד"/>
+  <div id="readingTrack">
+    <div id="readingContext">
+      <span id="readingChapter">כריכה</span>
+      <bdi id="readingPercent">0%</bdi>
+    </div>
+    <input id="scrub" type="range" min="1" max="1" value="1" step="1" aria-label="מעבר לעמוד"/>
+  </div>
 </div>
 
 <div id="scrubprev"><img id="spL" alt=""/><img id="spR" alt=""/><span class="lbl"></span></div>
@@ -1282,6 +1295,21 @@ function updateCounter() {
   document.getElementById('edgeNext').classList.toggle('hide', i >= total - 1);
   var s = document.getElementById('scrub');
   if (!scrubbing) s.value = i + 1;
+  var single = flip.getOrientation() === 'portrait' || i === 0;
+  var rawPage = rawPageForDisplay(Math.min(total, i + (single ? 1 : 2)));
+  var pages = EDITIONS[edition].pages;
+  var chapter = 'עמודי הפתיחה';
+  tocEntries().forEach(function (item) {
+    if (Number(item[1]) <= rawPage) chapter = item[0];
+  });
+  if (rawPage === 1) chapter = 'כריכה';
+  else if (rawPage === pages) chapter = 'כריכה אחורית';
+  var percent = Math.round((rawPage - 1) / Math.max(1, pages - 1) * 100);
+  document.getElementById('readingChapter').textContent = chapter;
+  document.getElementById('readingChapter').title = chapter;
+  document.getElementById('readingPercent').textContent = percent + '%';
+  document.getElementById('readingTrack').style.setProperty('--progress', percent + '%');
+  s.setAttribute('aria-valuetext', chapter + ' · ' + t + ' · ' + percent + '%');
 }
 
 function nextPage() { if (flip) { playFlip(); flip.flipNext(); } }
