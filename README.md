@@ -15,6 +15,13 @@ A 3D page-turning web edition of a Hebrew family memoir.
 - Two editions: standard (68 pp) and large print (84 pp, 14 pt)
 - Hebrew UI: next / previous page, page counter, fullscreen
 - Keyboard: `→` back, `←` forward, `F` fullscreen
+- Resume reading: returning visitors see a Hebrew card with their last page
+  preview and a one-click return to it. The reader still opens at the cover.
+  Reading position stays in this browser only; no account or server is used.
+  Dismiss with “לא עכשיו” or `Esc`; navigating starts a new bookmark, and
+  the reset control clears it. Mobile and desktop share the same saved page,
+  even where mobile skips blank pages. Reading still works if browser storage
+  is unavailable.
 
 ### Structure
 
