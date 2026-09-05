@@ -16,10 +16,33 @@ A 3D page-turning web edition of a Hebrew family memoir.
 - Hebrew UI: next / previous page, page counter, fullscreen
 - Keyboard: `→` back, `←` forward, `F` fullscreen
 
+### Separate reader preview
+
+The enhanced reader is isolated in `preview.html`; `index.html` retains the
+production reader unchanged. Once these changes are merged into `main` and
+GitHub Pages finishes deploying, the preview will be available at
+https://yohasson.github.io/kabala/preview.html.
+Pushing this development branch alone does **not** publish the preview.
+
+Preview features:
+
+- Live reading progress: the current chapter and percentage appear above the
+  right-to-left scrubber, with a filled track and descriptive screen-reader
+  value. Progress follows the source pages across mobile and desktop, from
+  0% at the front cover to 100% at the final spread.
+- Resume reading: returning visitors see a Hebrew card with their last page
+  preview and a one-click return to it. The reader still opens at the cover.
+  Reading position stays in this browser only; no account or server is used.
+  Dismiss with “לא עכשיו” or `Esc`; navigating starts a new bookmark, and
+  the reset control clears it. Mobile and desktop share the same saved page,
+  even where mobile skips blank pages. Reading still works if browser storage
+  is unavailable.
+
 ### Structure
 
 ```
 index.html            the flipbook
+preview.html          enhanced reader preview (same shared images and vendor files)
 images/regular/       standard edition, 68 pages
 images/large/         large-print edition, 84 pages
 ```
