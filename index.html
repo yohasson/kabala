@@ -439,7 +439,7 @@
      two page "humps" flanking the seam. Positioned/sized by layout(); hidden
      while a page is mid-flip so the turning sheet is never covered. */
   #gutter{
-    position:absolute;z-index:4;pointer-events:none;opacity:0;
+    position:absolute;z-index:2;pointer-events:none;opacity:0;
     mix-blend-mode:multiply;
     background:linear-gradient(to right,
       rgba(0,0,0,0) 0%,
@@ -465,7 +465,7 @@
       rgba(255,255,255,.055) 58%,
       rgba(255,255,255,0) 68%);
   }
-  html.flip-active #gutter{opacity:0!important}
+  html.flip-active #gutter{}
 
   /* ---------------- bottom scrubber ---------------- */
   #bottom{
@@ -1092,6 +1092,11 @@ function warm(list, count, done) {
 function build(startPage) {
   buildingBook = true;
   var el = document.getElementById('book');
+  /* The spine (#gutter) lives INSIDE #book during display so a flipping page
+     (higher z-index) sweeps over and covers it like a real book. Move it out to
+     #zoomwrap before wiping #book so innerHTML='' doesn't destroy it. */
+  var gsave = document.getElementById('gutter');
+  if (gsave && gsave.parentNode === el) document.getElementById('zoomwrap').appendChild(gsave);
   el.innerHTML = '';
 
   /* Read #stage's actual padding rather than a hardcoded guess - it now
@@ -1164,6 +1169,10 @@ function build(startPage) {
     showPageCorners: true
   });
   flip.loadFromHTML(el.querySelectorAll('.page'));
+  /* Slot the spine into #book's stacking context: above the resting spread
+     (z-index 1) but below the incoming (3) and flipping (5) pages, so a turning
+     page passes in front of it instead of the spine vanishing. */
+  if (gsave) el.appendChild(gsave);
   var currentFlip = flip;
   flip.on('flip', function () {
     if (currentFlip !== flip) return;
@@ -1265,9 +1274,9 @@ function layout() {
     var gw = Math.round(bw * 0.085);
     g.style.opacity = .9;
     g.style.height = bh + 'px';
-    g.style.top = by + 'px';
+    g.style.top = '0px';                 // relative to #book (its parent now)
     g.style.width = gw + 'px';
-    g.style.left = (bx + off + (bw - gw) / 2) + 'px';
+    g.style.left = ((bw - gw) / 2) + 'px';
   }
 
   /* Corner-peel hints, mirroring the edge arrows: "next" hugs the left
