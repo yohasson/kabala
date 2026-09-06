@@ -835,21 +835,24 @@ function showResume() {
   document.getElementById('resumeCard').hidden = false;
 }
 /* Jump to a page index and hold it. StPageFlip can snap a turnToPage() issued
-   before it has finished settling (e.g. right after load, or in landscape where
-   it re-derives the spread-left index) to a neighbouring spread. Re-assert the
-   target across a bounded set of frames until it sticks. turnToPage is instant
-   (no glide/event) and we run it under 'nofx', so this is invisible when already
-   correct and silently corrects init/landscape snap when not. */
+   before it has finished its (landscape) spread-pairing init to a neighbouring
+   spread. Re-assert the target across a bounded set of animation frames until it
+   sticks. turnToPage is instant (no glide, no 'flip' event) and runs under
+   'nofx', so this is invisible when already correct and silently corrects the
+   init/landscape snap when not. Self-cancelling per call via a token so rapid
+   successive jumps (e.g. TOC spam) never fight each other with stale loops. */
+var _settleToken = 0;
 function settleToPage(wantIdx) {
   if (!flip) return;
   wantIdx = Math.max(0, Math.min(total - 1, wantIdx));
   var book = document.getElementById('book');
+  var token = ++_settleToken;
   if (book) book.classList.add('nofx');
   flip.turnToPage(wantIdx);
   sync();
   var tries = 0, stable = 0;
   (function step() {
-    if (!flip) return;
+    if (!flip || token !== _settleToken) return;   // superseded by a newer jump
     if (flip.getCurrentPageIndex() !== wantIdx) {
       flip.turnToPage(wantIdx); sync(); stable = 0;
     } else { stable++; }
