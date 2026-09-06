@@ -439,6 +439,33 @@
      and moves with the turning page. The old #gutter element is retired. */
   #gutter{display:none}
 
+  /* Portrait "closing cover" animation. When advancing from the last content
+     page to the back cover on a phone, the back cover swings in from the left
+     and lays flat on top of the last page - like shutting a real book - instead
+     of the last page peeling away to reveal a static cover. #closeWrap is
+     positioned over #book and carries the 3D perspective; #closingCover is the
+     rotating leaf (its face is the back-cover image), hinged on its left edge. */
+  #closeWrap{
+    position:absolute;z-index:6;pointer-events:none;display:none;
+    perspective:1600px;
+  }
+  #closeWrap.on{display:block}
+  #closingCover{
+    position:absolute;inset:0;
+    transform-origin:left center;
+    background-size:cover;background-position:center;background-repeat:no-repeat;
+    backface-visibility:hidden;-webkit-backface-visibility:hidden;
+    box-shadow:-10px 12px 34px rgba(0,0,0,.34);
+    will-change:transform;
+  }
+  /* Travelling shade: the incoming cover casts a soft shadow onto the page
+     below, strongest while it is raised and fading as it lays flat. */
+  #closeWrap.on::after{
+    content:'';position:absolute;inset:0;pointer-events:none;
+    background:linear-gradient(to right,rgba(0,0,0,.28),rgba(0,0,0,0) 60%);
+    opacity:var(--close-shade,0);transition:opacity .55s ease-out;
+  }
+
   /* ---------------- bottom scrubber ---------------- */
   #bottom{
     position:fixed;left:0;right:0;bottom:0;height:64px;z-index:30;
@@ -714,6 +741,7 @@
     <div id="spreadfx"></div>
     <div id="book"></div>
     <div id="gutter"></div>
+    <div id="closeWrap"><div id="closingCover"></div></div>
     <div class="peel pn" id="peelNextB" onclick="nextPage()"><span class="peelarrow flip"><svg viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg></span></div>
     <div class="peel pn top" id="peelNextT" onclick="nextPage()"></div>
     <div class="peel" id="peelPrevB" onclick="prevPage()"><span class="peelarrow"><svg viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg></span></div>
@@ -1310,7 +1338,53 @@ function updateCounter() {
   s.setAttribute('aria-valuetext', chapter + ' · ' + t + ' · ' + percent + '%');
 }
 
-function nextPage() { if (flip) { playFlip(); flip.flipNext(); } }
+function nextPage() {
+  if (!flip) return;
+  /* Closing-the-book animation: on a phone (portrait), advancing from the last
+     content page to the back cover swings the cover in from the left instead of
+     peeling the last page away. Only when we're one step before the back
+     cover and it really is the last leaf. */
+  if (portrait && !closing &&
+      flip.getCurrentPageIndex() === total - 2 &&
+      currentPageSeq[total - 1] === EDITIONS[edition].pages) {
+    closeCover();
+    return;
+  }
+  playFlip();
+  flip.flipNext();
+}
+var closing = false;
+function closeCover() {
+  var book = document.getElementById('book');
+  var wrap = document.getElementById('closeWrap');
+  var cov = document.getElementById('closingCover');
+  if (!book || !wrap || !cov) { playFlip(); flip.flipNext(); return; }
+  closing = true;
+  wrap.style.left = book.offsetLeft + 'px';
+  wrap.style.top = book.offsetTop + 'px';
+  wrap.style.width = book.offsetWidth + 'px';
+  wrap.style.height = book.offsetHeight + 'px';
+  cov.style.backgroundImage = "url('" + pageSrc(edition, currentPageSeq[total - 1]) + "')";
+  wrap.classList.add('on');
+  cov.style.transition = 'none';
+  cov.style.transform = 'rotateY(90deg)';
+  wrap.style.setProperty('--close-shade', '1');
+  void cov.offsetWidth;                       // force reflow so the start state sticks
+  playFlip();
+  cov.style.transition = 'transform .64s cubic-bezier(.34,.62,.28,1)';
+  cov.style.transform = 'rotateY(0deg)';
+  wrap.style.setProperty('--close-shade', '0');
+  var done = function () {
+    cov.removeEventListener('transitionend', done);
+    flip.turnToPage(total - 1);
+    sync();
+    rememberReadingPosition();
+    wrap.classList.remove('on');
+    closing = false;
+  };
+  cov.addEventListener('transitionend', done);
+  setTimeout(function () { if (closing) done(); }, 780);   // safety net
+}
 function prevPage() { if (flip) { playFlip(); flip.flipPrev(); } }
 function scrollPage(dir) {
   if (!flip) return;
