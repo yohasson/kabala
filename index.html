@@ -1385,7 +1385,54 @@ function closeCover() {
   cov.addEventListener('transitionend', done);
   setTimeout(function () { if (closing) done(); }, 780);   // safety net
 }
-function prevPage() { if (flip) { playFlip(); flip.flipPrev(); } }
+function prevPage() {
+  if (!flip) return;
+  /* Opening-the-book animation (reverse of closeCover): on a phone (portrait),
+     going back from the back cover swings the cover open toward the front to
+     reveal the last content page underneath. */
+  if (portrait && !closing &&
+      flip.getCurrentPageIndex() === total - 1 &&
+      currentPageSeq[total - 1] === EDITIONS[edition].pages) {
+    openCover();
+    return;
+  }
+  playFlip();
+  flip.flipPrev();
+}
+function openCover() {
+  var book = document.getElementById('book');
+  var wrap = document.getElementById('closeWrap');
+  var cov = document.getElementById('closingCover');
+  if (!book || !wrap || !cov) { playFlip(); flip.flipPrev(); return; }
+  closing = true;
+  var raw = currentPageSeq[total - 1];
+  /* reveal the last content page underneath, then lay the cover flat on top of
+     it and lift it off toward the viewer. */
+  flip.turnToPage(total - 2);
+  sync();
+  wrap.style.left = book.offsetLeft + 'px';
+  wrap.style.top = book.offsetTop + 'px';
+  wrap.style.width = book.offsetWidth + 'px';
+  wrap.style.height = book.offsetHeight + 'px';
+  cov.style.backgroundImage = "url('" + pageSrc(edition, raw) + "')";
+  wrap.classList.add('on');
+  cov.style.transition = 'none';
+  cov.style.transform = 'rotateY(0deg)';
+  wrap.style.setProperty('--close-shade', '0');
+  void cov.offsetWidth;                       // force reflow so the start state sticks
+  playFlip();
+  cov.style.transition = 'transform .64s cubic-bezier(.34,.62,.28,1)';
+  cov.style.transform = 'rotateY(-90deg)';
+  wrap.style.setProperty('--close-shade', '1');
+  var done = function () {
+    cov.removeEventListener('transitionend', done);
+    rememberReadingPosition();
+    wrap.classList.remove('on');
+    closing = false;
+  };
+  cov.addEventListener('transitionend', done);
+  setTimeout(function () { if (closing) done(); }, 780);   // safety net
+}
 function scrollPage(dir) {
   if (!flip) return;
   var p = Math.max(1, Math.min(total, flip.getCurrentPageIndex() + 1 + dir));
