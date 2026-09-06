@@ -1367,7 +1367,7 @@ function closeCover() {
   cov.style.backgroundImage = "url('" + pageSrc(edition, currentPageSeq[total - 1]) + "')";
   wrap.classList.add('on');
   cov.style.transition = 'none';
-  cov.style.transform = 'rotateY(90deg)';
+  cov.style.transform = 'rotateY(-90deg)';
   wrap.style.setProperty('--close-shade', '1');
   void cov.offsetWidth;                       // force reflow so the start state sticks
   playFlip();
