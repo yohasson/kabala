@@ -1185,7 +1185,8 @@ function build(startPage) {
   var s = document.getElementById('scrub');
   s.min = 1; s.max = total;
 
-  if (startPage && startPage > 1 && startPage <= total) flip.turnToPage(startPage - 1);
+  var wantPage = (startPage && startPage > 1 && startPage <= total) ? (startPage - 1) : null;
+  if (wantPage !== null) flip.turnToPage(wantPage);
 
   el.classList.add('nofx');           // no glide when the book is (re)built
   sync();
@@ -1193,7 +1194,36 @@ function build(startPage) {
   lastReadingPage = rawPageForDisplay(flip.getCurrentPageIndex() + 1);
   buildingBook = false;
   requestAnimationFrame(function () {
-    requestAnimationFrame(function () { el.classList.remove('nofx'); });
+    /* StPageFlip finalises its landscape spread-pairing only after the first
+       few renders, so a turnToPage() issued during init can snap up to a full
+       spread low (e.g. rotating mid-book lands you one spread before the page
+       you were reading). Re-assert the intended page across a bounded set of
+       frames until the library stops snapping it away. turnToPage is instant
+       (no glide, no 'flip' event) and runs under 'nofx', so this is invisible
+       when already correct and silently corrects the orientation-change drift
+       when not. */
+    if (wantPage === null) {
+      requestAnimationFrame(function () { el.classList.remove('nofx'); });
+      return;
+    }
+    var tries = 0, MAX_TRIES = 40, stable = 0;
+    (function settle() {
+      if (!flip) return;
+      if (flip.getCurrentPageIndex() !== wantPage) {
+        flip.turnToPage(wantPage);
+        sync();
+        lastReadingPage = rawPageForDisplay(flip.getCurrentPageIndex() + 1);
+        stable = 0;
+      } else {
+        stable++;
+      }
+      tries++;
+      if (stable < 3 && tries < MAX_TRIES) {
+        requestAnimationFrame(settle);
+      } else {
+        requestAnimationFrame(function () { el.classList.remove('nofx'); });
+      }
+    })();
   });
 }
 
@@ -1833,11 +1863,24 @@ document.addEventListener('keydown', function (e) {
   if (e.key === '0') setZoom(1);
 });
 
-var rt;
+var rt, pendingRawPage = null;
 window.addEventListener('resize', function () {
+  /* StPageFlip installs its OWN window 'resize' listener (inside build's
+     loadFromHTML) which runs update() -> pages.show() -> showSpread() and, in
+     landscape, re-derives currentPageIndex to the spread's LEFT page - snapping
+     e.g. slot 46 down to slot 45 - and even fires a spurious 'flip' event. That
+     listener is registered AFTER this one (build runs after this script's first
+     pass), so this handler fires first: capture the true reading page here,
+     synchronously, before StPageFlip corrupts the index. The null-guard keeps
+     the value from the first event of a resize burst, so later (already-snapped)
+     events in the same drag don't overwrite it. */
+  if (flip && pendingRawPage === null) {
+    pendingRawPage = rawPageForDisplay(flip.getCurrentPageIndex() + 1);
+  }
   clearTimeout(rt);
   rt = setTimeout(function () {
-    var rawPage = flip ? rawPageForDisplay(flip.getCurrentPageIndex() + 1) : 1;
+    var rawPage = pendingRawPage != null ? pendingRawPage : 1;
+    pendingRawPage = null;
     build(displayPageForRawInEdition(edition, rawPage, stage.clientHeight >= stage.clientWidth));
   }, 200);
 });
