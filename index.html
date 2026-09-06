@@ -598,7 +598,7 @@
 <div class="card" id="titlecard">
   <h1>הולך בדרכי</h1>
   <span class="sub">סיפור חיים — יעקב קבלה</span>
-  <span class="sub" style="opacity:.65;font-size:.78em">עודכן לאחרונה: 7 בספטמבר 2026, 00:13</span>
+  <span class="sub" style="opacity:.65;font-size:.78em" id="lastUpdated">עודכן לאחרונה: 7 בספטמבר 2026, 00:13</span>
   <div class="titlecontrols">
     <button class="ico" id="tocbtn" onclick="toggleToc()" title="תוכן עניינים" aria-label="תוכן עניינים">
       <svg viewBox="0 0 24 24"><path d="M8 6h11M8 12h11M8 18h11"/><path d="M4.5 6h.01M4.5 12h.01M4.5 18h.01"/></svg>
@@ -1721,6 +1721,23 @@ warm(srcs(edition), 4, function () {
 </script>
 
 <div id="buildTag">build: 2026-08-18 00:48 GMT+3</div>
+
+<script>
+// Dynamic "last updated" from the repo's latest commit (any change to the book/site).
+(function(){
+  fetch('https://api.github.com/repos/yohasson/kabala/commits?per_page=1')
+    .then(function(r){ return r.ok ? r.json() : null; })
+    .then(function(list){
+      if(!list || !list[0] || !list[0].commit) return;
+      var d = new Date(list[0].commit.committer.date);
+      if(isNaN(d)) return;
+      var s = d.toLocaleDateString('he-IL',{day:'numeric',month:'long',year:'numeric'}) +
+              ', ' + d.toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});
+      var el = document.getElementById('lastUpdated');
+      if(el) el.textContent = 'עודכן לאחרונה: ' + s;
+    }).catch(function(){});
+})();
+</script>
 
 </body>
 </html>

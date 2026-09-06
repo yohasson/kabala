@@ -92,7 +92,7 @@
   <header>
     <h1>הולך בדרכי</h1>
     <p>סיפור חיים · יעקב קבלה</p>
-    <p style="opacity:.6;font-size:.85em;margin-top:2px">עודכן לאחרונה: 7 בספטמבר 2026, 00:13</p>
+    <p style="opacity:.6;font-size:.85em;margin-top:2px" id="lastUpdated">עודכן לאחרונה: 7 בספטמבר 2026, 00:13</p>
   </header>
 
   <a class="cta" href="https://yohasson.github.io/kabala/" target="_blank" rel="noopener">
@@ -166,79 +166,25 @@
     </a></div>
   </details>
 
-  <!-- FEATURE HIDDEN (versioning) — set style display:block to re-enable -->
-  <div id="versioningFeature" style="display:none">
-  <div class="sec">גרסאות הספר</div>
-  <div class="vlist" id="versionList">
-    <a class="vrow" href="https://yohasson.github.io/kabala/" target="_blank" rel="noopener">
-      <div><div class="vt">📖 המהדורה המקורית</div><div class="vd">הגרסה הרשמית — לעולם אינה משתנה</div></div>
-      <span class="badge">מקור</span>
-    </a>
-  </div>
-
-  <div class="sec">יצירת גרסה חדשה (לבני המשפחה)</div>
-
-  <div class="feat">
-    <h3>✍️ אפשרות א' — עריכה ישירה ב-Word</h3>
-    <p class="sub">הורידו עותק, ערכו אותו, והעלו — וכל הקבצים (הדפסה + ספר דיגיטלי) ייווצרו אוטומטית כגרסה חדשה ונפרדת.</p>
-    <div class="step"><span class="num">1</span><div>הורידו עותק של קובץ המקור לעריכה.</div></div>
-    <div class="step"><span class="num">2</span><div>ערכו אותו ב-Word (הטקסט, לא העיצוב).</div></div>
-    <div class="step"><span class="num">3</span><div>העלו את הקובץ הערוך לתיקיית ה-INBOX. תוך מספר דקות תיווצר גרסה חדשה שתופיע ברשימת הגרסאות למעלה.</div></div>
-    <a class="btn ghost" href="https://drive.google.com/drive/folders/1qXKcXrxKroHrxZDtOR8Kw2VjLyiawIP1" target="_blank" rel="noopener">⬇️ הורדת עותק לעריכה</a>
-    <a class="btn primary" href="#" id="inboxLink" target="_blank" rel="noopener">⬆️ העלאת הקובץ הערוך (INBOX)</a>
-    <div class="note">הגרסה המקורית נשמרת תמיד כפי שהיא. כל עריכה יוצרת גרסה נוספת בלבד.</div>
-  </div>
-
-  <div class="feat">
-    <h3>💬 אפשרות ב' — בקשת שינוי בכתיבה חופשית</h3>
-    <p class="sub">כתבו במילים שלכם מה תרצו לשנות (למשל: «בעמוד 12 יש לתקן שם», «לשנות את ההקדשה ל...»). נטפל בבקשה וניצור גרסה חדשה.</p>
-    <textarea class="chat" id="chatReq" placeholder="לדוגמה: בעמוד 44 יש טעות כתיב במילה... נא לתקן ל..."></textarea>
-    <input id="reqName" class="chat" style="min-height:auto;height:42px;margin-top:8px" placeholder="השם שלך (לא חובה)"/>
-    <button class="btn primary" id="sendReq">שליחת הבקשה</button>
-    <div class="note" id="reqStatus">הבקשה תישלח לתיקיית ה-INBOX ותטופל תוך זמן קצר. הגרסה החדשה תופיע ברשימה למעלה.</div>
-  </div>
-  </div>
-  <!-- END FEATURE HIDDEN -->
-
   <footer>
     הקישורים פתוחים לכל מי שברשותו הקישור. הגרסה המקורית לעולם אינה משתנה.
   </footer>
 </div>
 
 <script>
-// INBOX folder link (family upload target)
-var INBOX_URL = "https://drive.google.com/drive/folders/1JIBzUF9HLvMSSDOjF74FABQJJGR5jPph";
-document.getElementById('inboxLink').href = INBOX_URL;
-
-// Load version registry
-fetch('../versions.json?ts=' + Date.now()).then(function(r){ return r.ok ? r.json() : []; })
-  .then(function(list){
-    if(!Array.isArray(list) || !list.length) return;
-    var el = document.getElementById('versionList');
-    el.innerHTML = '';
-    list.forEach(function(v){
-      var a = document.createElement('a');
-      a.className = 'vrow'; a.href = v.flipbookUrl; a.target = '_blank'; a.rel='noopener';
-      var isOrig = v.id === 'original';
-      a.innerHTML = '<div><div class="vt">'+(isOrig?'📖 ':'📗 ')+
-        (v.label||v.id)+'</div><div class="vd">'+
-        (isOrig?'הגרסה הרשמית — לעולם אינה משתנה':('נוצר: '+(v.created||'')+(v.pages?(' · '+v.pages+' עמ\\''):'')))+
-        '</div></div><span class="badge">'+(isOrig?'מקור':'גרסה')+'</span>';
-      el.appendChild(a);
-    });
-  }).catch(function(){});
-
-// Chat request -> opens a prefilled email/Drive note (client cannot write Drive directly;
-// we hand off via a mailto so the request reaches the pipeline owner + inbox flow).
-document.getElementById('sendReq').addEventListener('click', function(){
-  var txt = document.getElementById('chatReq').value.trim();
-  var who = document.getElementById('reqName').value.trim();
-  if(!txt){ document.getElementById('reqStatus').textContent = 'נא לכתוב את הבקשה תחילה.'; return; }
-  var body = encodeURIComponent('בקשת שינוי לספר «הולך בדרכי»\n\nמאת: '+(who||'—')+'\n\n'+txt);
-  window.location.href = 'mailto:yossihasson1@gmail.com?subject=' +
-    encodeURIComponent('בקשת שינוי לספר הולך בדרכי') + '&body=' + body;
-  document.getElementById('reqStatus').textContent = 'נפתחה הודעת דוא"ל עם הבקשה — נא לשלוח אותה. נטפל בה ותיווצר גרסה חדשה.';
-});
+// Dynamic "last updated" from the repo's latest commit (any file change to the book/site).
+(function(){
+  fetch('https://api.github.com/repos/yohasson/kabala/commits?per_page=1')
+    .then(function(r){ return r.ok ? r.json() : null; })
+    .then(function(list){
+      if(!list || !list[0] || !list[0].commit) return;
+      var d = new Date(list[0].commit.committer.date);
+      if(isNaN(d)) return;
+      var s = d.toLocaleDateString('he-IL',{day:'numeric',month:'long',year:'numeric'}) +
+              ', ' + d.toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});
+      document.getElementById('lastUpdated').textContent = 'עודכן לאחרונה: ' + s;
+    }).catch(function(){});
+})();
 </script>
 </body>
 </html>
