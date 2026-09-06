@@ -408,11 +408,11 @@
   }
   .page.--left::after{
     --inner-edge-shade:linear-gradient(to left,
-      rgba(0,0,0,.18) 0%, rgba(0,0,0,.10) 7%, rgba(0,0,0,0) 18%);
+      rgba(0,0,0,.30) 0%, rgba(0,0,0,.20) 3%, rgba(0,0,0,.10) 8%, rgba(0,0,0,0) 20%);
   }
   .page.--right::after{
     --inner-edge-shade:linear-gradient(to right,
-      rgba(0,0,0,.18) 0%, rgba(0,0,0,.10) 7%, rgba(0,0,0,0) 18%);
+      rgba(0,0,0,.30) 0%, rgba(0,0,0,.20) 3%, rgba(0,0,0,.10) 8%, rgba(0,0,0,0) 20%);
   }
   html[data-paper="cream"] .page::after{
     background:var(--inner-edge-shade,transparent),
@@ -432,40 +432,12 @@
       rgba(0,0,0,.20) 0%, rgba(0,0,0,.09) 45%, rgba(0,0,0,0) 74%);
     filter:blur(14px);pointer-events:none;z-index:0;
   }
-  /* Center fold. A real perfect-bound book dips into shadow at the spine and
-     the two pages rise slightly toward it, catching a thin highlight before
-     the valley. The dark valley is a multiply gradient (darkens the paper
-     without graying whites); the ::after adds screen-blend highlights on the
-     two page "humps" flanking the seam. Positioned/sized by layout(); hidden
-     while a page is mid-flip so the turning sheet is never covered. */
-  #gutter{
-    position:absolute;z-index:2;pointer-events:none;opacity:0;
-    mix-blend-mode:multiply;
-    background:linear-gradient(to right,
-      rgba(0,0,0,0) 0%,
-      rgba(0,0,0,.015) 18%,
-      rgba(0,0,0,.05) 36%,
-      rgba(0,0,0,.13) 46%,
-      rgba(0,0,0,.24) 49.4%,
-      rgba(0,0,0,.30) 50%,
-      rgba(0,0,0,.24) 50.6%,
-      rgba(0,0,0,.13) 54%,
-      rgba(0,0,0,.05) 64%,
-      rgba(0,0,0,.015) 82%,
-      rgba(0,0,0,0) 100%);
-  }
-  #gutter::after{
-    content:'';position:absolute;inset:0;pointer-events:none;
-    mix-blend-mode:screen;
-    background:linear-gradient(to right,
-      rgba(255,255,255,0) 32%,
-      rgba(255,255,255,.055) 42%,
-      rgba(255,255,255,0) 48%,
-      rgba(255,255,255,0) 52%,
-      rgba(255,255,255,.055) 58%,
-      rgba(255,255,255,0) 68%);
-  }
-  html.flip-active #gutter{}
+  /* Spine. Rendered as per-page inner-edge shadows on .page.--left/--right::after
+     above, NOT as a fixed center band: a fixed band stayed at screen-centre and
+     showed as a hard stripe over the revealed page during a flip. Per-page edge
+     shadows belong to each sheet, so the fold shadow is always physically correct
+     and moves with the turning page. The old #gutter element is retired. */
+  #gutter{display:none}
 
   /* ---------------- bottom scrubber ---------------- */
   #bottom{
@@ -1092,11 +1064,6 @@ function warm(list, count, done) {
 function build(startPage) {
   buildingBook = true;
   var el = document.getElementById('book');
-  /* The spine (#gutter) lives INSIDE #book during display so a flipping page
-     (higher z-index) sweeps over and covers it like a real book. Move it out to
-     #zoomwrap before wiping #book so innerHTML='' doesn't destroy it. */
-  var gsave = document.getElementById('gutter');
-  if (gsave && gsave.parentNode === el) document.getElementById('zoomwrap').appendChild(gsave);
   el.innerHTML = '';
 
   /* Read #stage's actual padding rather than a hardcoded guess - it now
@@ -1169,10 +1136,6 @@ function build(startPage) {
     showPageCorners: true
   });
   flip.loadFromHTML(el.querySelectorAll('.page'));
-  /* Slot the spine into #book's stacking context: above the resting spread
-     (z-index 1) but below the incoming (3) and flipping (5) pages, so a turning
-     page passes in front of it instead of the spine vanishing. */
-  if (gsave) el.appendChild(gsave);
   var currentFlip = flip;
   flip.on('flip', function () {
     if (currentFlip !== flip) return;
@@ -1269,15 +1232,7 @@ function layout() {
   c.style.top = (by + bh - 6) + 'px';
 
   var g = document.getElementById('gutter');
-  if (portrait || aloneAt(i)) { g.style.opacity = 0; }
-  else {
-    var gw = Math.round(bw * 0.085);
-    g.style.opacity = .9;
-    g.style.height = bh + 'px';
-    g.style.top = '0px';                 // relative to #book (its parent now)
-    g.style.width = gw + 'px';
-    g.style.left = ((bw - gw) / 2) + 'px';
-  }
+  if (g) g.style.opacity = 0;   // retired: spine is per-page (.page.--left/--right::after)
 
   /* Corner-peel hints, mirroring the edge arrows: "next" hugs the left
      edge (RTL forward), "prev" the right edge, one peel per corner. */
