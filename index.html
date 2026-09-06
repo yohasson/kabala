@@ -834,13 +834,39 @@ function showResume() {
   document.getElementById('resumePreview').src = pageSrc(savedReading.edition, savedReading.page);
   document.getElementById('resumeCard').hidden = false;
 }
+/* Jump to a page index and hold it. StPageFlip can snap a turnToPage() issued
+   before it has finished settling (e.g. right after load, or in landscape where
+   it re-derives the spread-left index) to a neighbouring spread. Re-assert the
+   target across a bounded set of frames until it sticks. turnToPage is instant
+   (no glide/event) and we run it under 'nofx', so this is invisible when already
+   correct and silently corrects init/landscape snap when not. */
+function settleToPage(wantIdx) {
+  if (!flip) return;
+  wantIdx = Math.max(0, Math.min(total - 1, wantIdx));
+  var book = document.getElementById('book');
+  if (book) book.classList.add('nofx');
+  flip.turnToPage(wantIdx);
+  sync();
+  var tries = 0, stable = 0;
+  (function step() {
+    if (!flip) return;
+    if (flip.getCurrentPageIndex() !== wantIdx) {
+      flip.turnToPage(wantIdx); sync(); stable = 0;
+    } else { stable++; }
+    if (stable < 3 && tries++ < 40) {
+      requestAnimationFrame(step);
+    } else if (book) {
+      requestAnimationFrame(function () { book.classList.remove('nofx'); });
+    }
+  })();
+}
+
 function resumeReading() {
   if (!flip || !savedReading) return;
   var rawPage = savedReading.page;
   dismissResume();
   var target = currentPageSeq.findIndex(function (page) { return page >= rawPage; });
-  flip.turnToPage((target < 0 ? total : target + 1) - 1);
-  sync();
+  settleToPage((target < 0 ? total : target + 1) - 1);
 }
 
 /* ---------------- page-turn sound ---------------- */
@@ -1030,8 +1056,7 @@ function goToTocPage(page) {
   closeToc();
   if (!flip) return;
   if (zoom !== 1) setZoom(1);
-  flip.turnToPage(Math.max(1, Math.min(total, page)) - 1);
-  sync();
+  settleToPage(Math.max(1, Math.min(total, page)) - 1);
 }
 
 function resetReaderDefaults() {
