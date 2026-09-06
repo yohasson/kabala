@@ -1375,6 +1375,7 @@ function updateCounter() {
 
 function nextPage() {
   if (!flip) return;
+  if (closing) return;   // ignore nav while a cover open/close animation is mid-flight
   if (zoom !== 1) setZoom(1);   // turning a page returns to fit scale
   /* Closing-the-book animation: on a phone (portrait), advancing from the last
      content page to the back cover swings the cover in from the left instead of
@@ -1423,6 +1424,7 @@ function closeCover() {
 }
 function prevPage() {
   if (!flip) return;
+  if (closing) return;   // ignore nav while a cover open/close animation is mid-flight
   if (zoom !== 1) setZoom(1);   // turning a page returns to fit scale
   /* Opening-the-book animation (reverse of closeCover): on a phone (portrait),
      going back from the back cover swings the cover open toward the front to
