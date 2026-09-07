@@ -1,9 +1,8 @@
 <!doctype html>
-<html lang="en" data-theme="light">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="color-scheme" content="light dark">
   <title>Film production status</title>
   <script>
     (() => {
@@ -66,168 +65,281 @@
       --cp-sheen: rgba(255, 255, 255, 0.04);
       --cp-highlight: rgba(253, 142, 161, 0.12);
     }
-    * { box-sizing: border-box; }
+    *, *::before, *::after { box-sizing: border-box; }
     html, body { margin: 0; min-height: 100%; }
     body {
       background: var(--cp-bg);
       color: var(--cp-text);
       font-family: "Segoe UI", Aptos, Calibri, -apple-system, BlinkMacSystemFont, sans-serif;
+      font-size: 15px;
       line-height: 1.5;
     }
     a { color: var(--cp-link); }
-    button, input, select {
-      font: inherit;
-      color: inherit;
-    }
+    button, input, select { font: inherit; color: inherit; }
     button {
       border: 1px solid var(--cp-border);
       background: var(--cp-surface);
       border-radius: 0.625rem;
-      padding: 0.65rem 0.9rem;
+      padding: 0.65rem 1rem;
+      min-height: 44px;
       cursor: pointer;
       box-shadow: 0 0 2px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.14);
     }
     button:hover { border-color: var(--cp-border-strong); }
+    button:focus-visible { outline: 3px solid var(--cp-accent); outline-offset: 3px; }
+    input:focus-visible, select:focus-visible { outline: 3px solid var(--cp-accent); outline-offset: 2px; }
+
+    /* Layout */
     .page {
-      width: min(1180px, calc(100% - 24px));
+      width: min(1180px, 100%);
       margin: 0 auto;
-      padding: 16px 0 32px;
+      padding: 0 12px 40px;
     }
-    .hero, .panel, .card {
+
+    /* Surface types */
+    .surface {
       background: var(--cp-surface);
       border: 1px solid var(--cp-border);
       border-radius: 16px;
       box-shadow: 0 0 2px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.14);
     }
-    .hero {
-      padding: 18px;
-      margin-bottom: 16px;
-    }
-    .hero-top {
+
+    /* ── Header ── */
+    .header {
+      padding: 20px 0 12px;
       display: flex;
       gap: 12px;
-      justify-content: space-between;
       align-items: flex-start;
+      justify-content: space-between;
       flex-wrap: wrap;
     }
     .eyebrow {
-      color: var(--cp-text-muted);
-      font-size: 0.88rem;
-      letter-spacing: 0.02em;
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
       text-transform: uppercase;
+      color: var(--cp-accent);
       margin: 0 0 4px;
     }
     h1 {
-      font-size: clamp(1.55rem, 3vw, 2.2rem);
+      font-size: clamp(1.4rem, 3.5vw, 2rem);
       line-height: 1.1;
-      margin: 0 0 8px;
+      margin: 0 0 6px;
     }
-    .lede {
-      margin: 0;
-      color: var(--cp-text-muted);
-      max-width: 74ch;
-    }
-    .status-pill, .mini-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.35rem;
-      border-radius: 999px;
-      border: 1px solid var(--cp-border);
-      padding: 0.35rem 0.7rem;
-      background: var(--cp-bg-elevated);
-      color: var(--cp-text-muted);
-      white-space: nowrap;
-    }
-    .status-pill strong, .mini-pill strong { color: var(--cp-text); }
-    .hero-actions {
+    .lede { margin: 0; color: var(--cp-text-muted); font-size: 0.93rem; }
+    .header-right {
       display: flex;
       flex-wrap: wrap;
       gap: 8px;
       align-items: center;
-      justify-content: flex-end;
+      padding-top: 4px;
     }
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(12, minmax(0, 1fr));
-      gap: 12px;
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.82rem;
+      border-radius: 999px;
+      border: 1px solid var(--cp-border);
+      padding: 0.3rem 0.75rem;
+      background: var(--cp-bg-elevated);
+      color: var(--cp-text-muted);
+      white-space: nowrap;
     }
-    .metric {
-      grid-column: span 3;
-      padding: 16px;
-    }
-    .metric .label { color: var(--cp-text-muted); font-size: 0.88rem; }
-    .metric .value { font-size: 1.6rem; font-weight: 650; margin: 2px 0 0; }
-    .metric .sub { color: var(--cp-text-soft); font-size: 0.88rem; margin-top: 4px; }
-    .panel {
-      padding: 16px;
-      margin-top: 12px;
-    }
-    .section-title {
+    .pill strong { color: var(--cp-text); font-weight: 600; }
+    .pill.stale { border-color: var(--cp-warning); color: var(--cp-warning); }
+    .pill.offline { border-color: var(--cp-danger); color: var(--cp-danger); }
+
+    /* Freshness bar */
+    .freshness-bar {
+      font-size: 0.84rem;
+      color: var(--cp-text-muted);
+      padding: 6px 0 12px;
       display: flex;
-      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
       align-items: baseline;
+    }
+    .freshness-bar .sep { color: var(--cp-border-strong); }
+
+    /* ── Film proof spotlight ── */
+    .spotlight {
+      padding: 20px;
+      margin-bottom: 12px;
+    }
+    .spotlight-inner {
+      display: flex;
+      gap: 20px;
+      align-items: flex-start;
+      flex-wrap: wrap;
+    }
+    .spotlight-main { flex: 1 1 260px; }
+    .spotlight-stats {
+      flex: 0 0 auto;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(64px, auto));
+      gap: 4px 20px;
+      font-size: 0.88rem;
+    }
+    .spotlight-stats .sk { color: var(--cp-text-muted); }
+    .spotlight-stats .sv { font-weight: 650; }
+    .spotlight h2 { font-size: 0.82rem; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; color: var(--cp-text-muted); margin: 0 0 6px; }
+    .proof-label { font-size: 1.1rem; font-weight: 650; margin: 0 0 8px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .proof-note { font-size: 0.88rem; color: var(--cp-text-muted); margin: 4px 0 0; }
+
+    /* Status badges */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      border-radius: 999px;
+      padding: 0.22rem 0.65rem;
+      border: 1px solid transparent;
+      white-space: nowrap;
+      vertical-align: middle;
+    }
+    .badge-dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+    .badge.done { background: rgba(22,163,74,0.1); border-color: rgba(22,163,74,0.3); color: var(--cp-success); }
+    .badge.done .badge-dot { background: var(--cp-success); }
+    .badge.working { background: var(--cp-accent-soft); border-color: var(--cp-accent); color: var(--cp-accent); }
+    .badge.working .badge-dot { background: var(--cp-accent); animation: pulse-dot 1.2s ease-in-out infinite; }
+    .badge.review { background: rgba(245,158,11,0.1); border-color: rgba(245,158,11,0.3); color: var(--cp-warning); }
+    .badge.review .badge-dot { background: var(--cp-warning); }
+    .badge.blocked { background: rgba(220,38,38,0.1); border-color: rgba(220,38,38,0.3); color: var(--cp-danger); }
+    .badge.blocked .badge-dot { background: var(--cp-danger); }
+    .badge.needs-correction { background: rgba(220,38,38,0.08); border-color: rgba(220,38,38,0.2); color: var(--cp-danger); }
+    .badge.needs-correction .badge-dot { background: var(--cp-danger); opacity: 0.6; }
+    .badge.stale, .badge.unknown, .badge.pending { background: var(--cp-surface-soft); border-color: var(--cp-border); color: var(--cp-text-muted); }
+    .badge.stale .badge-dot, .badge.unknown .badge-dot, .badge.pending .badge-dot { background: var(--cp-text-soft); }
+    .badge.partial { background: rgba(245,158,11,0.08); border-color: rgba(245,158,11,0.25); color: var(--cp-warning); }
+    .badge.partial .badge-dot { background: var(--cp-warning); }
+    @keyframes pulse-dot { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+    @media (prefers-reduced-motion: reduce) {
+      .badge.working .badge-dot { animation: none; }
+    }
+
+    /* ── Progress cards (metrics) ── */
+    .progress-row {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 12px;
       margin-bottom: 12px;
     }
-    .section-title h2 {
-      margin: 0;
-      font-size: 1.12rem;
-    }
-    .section-title .hint { color: var(--cp-text-muted); font-size: 0.92rem; }
-    .timeline {
+    .prog-card { padding: 18px; }
+    .prog-card h3 { font-size: 0.88rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--cp-text-muted); margin: 0 0 12px; }
+    .prog-dl { margin: 0; }
+    .prog-dl dt { font-size: 0.82rem; color: var(--cp-text-muted); margin-top: 8px; }
+    .prog-dl dt:first-child { margin-top: 0; }
+    .prog-dl dd { font-size: 1.05rem; font-weight: 650; margin: 1px 0 0; padding: 0; }
+    .prog-dl dd.sub { font-size: 0.88rem; font-weight: 400; color: var(--cp-text-soft); }
+    .prog-note { font-size: 0.78rem; color: var(--cp-text-soft); margin: 10px 0 0; border-top: 1px solid var(--cp-border); padding-top: 8px; }
+
+    /* ── Timeline ── */
+    .time-panel { padding: 16px; margin-bottom: 12px; }
+    .time-panel h2 { font-size: 0.9rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--cp-text-muted); margin: 0 0 12px; }
+    .time-grid {
       display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 12px;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
     }
-    .timeline .card { padding: 14px; }
-    .timeline .card .k { color: var(--cp-text-muted); font-size: 0.88rem; }
-    .timeline .card .v { font-size: 1.05rem; font-weight: 650; margin-top: 2px; }
-    .timeline .card .s { color: var(--cp-text-soft); font-size: 0.88rem; margin-top: 4px; }
+    .time-card {
+      background: var(--cp-bg-elevated);
+      border: 1px solid var(--cp-border);
+      border-radius: 10px;
+      padding: 12px;
+    }
+    .time-card .tk { font-size: 0.8rem; color: var(--cp-text-muted); margin: 0 0 3px; }
+    .time-card .tv { font-size: 0.95rem; font-weight: 650; margin: 0; }
+    .time-card .ts { font-size: 0.82rem; color: var(--cp-text-soft); margin: 3px 0 0; font-variant-numeric: tabular-nums; }
+
+    /* ── Workstreams ── */
+    .ws-panel { padding: 16px; margin-bottom: 12px; }
+    .ws-panel h2 { font-size: 0.9rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--cp-text-muted); margin: 0 0 12px; }
+    .ws-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .ws-card {
+      background: var(--cp-bg-elevated);
+      border: 1px solid var(--cp-border);
+      border-radius: 10px;
+      padding: 12px;
+    }
+    .ws-name { font-weight: 650; font-size: 0.93rem; }
+    .ws-counts { font-size: 0.8rem; color: var(--cp-text-muted); margin: 3px 0 8px; }
+    .ws-bars { display: flex; gap: 3px; height: 6px; border-radius: 999px; overflow: hidden; background: var(--cp-surface-soft); }
+    .ws-bars > span { height: 100%; flex-shrink: 0; }
+    .ws-bar-done { background: var(--cp-success); }
+    .ws-bar-review { background: var(--cp-warning); }
+    .ws-bar-blocked { background: var(--cp-danger); }
+    .ws-bar-working { background: var(--cp-accent); }
+    .ws-bar-correction { background: var(--cp-danger); opacity: 0.5; }
+    .ws-bar-other { background: var(--cp-text-soft); opacity: 0.35; }
+    .ws-legend { display: flex; flex-wrap: wrap; gap: 6px 12px; font-size: 0.75rem; color: var(--cp-text-muted); margin-top: 7px; }
+    .ws-legend span { display: flex; align-items: center; gap: 4px; }
+    .ws-legend .dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+
+    /* ── Milestones ── */
+    .milestone-panel { padding: 16px; margin-bottom: 12px; }
+    .milestone-panel h2 { font-size: 0.9rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--cp-text-muted); margin: 0 0 10px; }
+    .milestone-list { display: flex; flex-direction: column; gap: 6px; }
+    .milestone-row {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+      font-size: 0.88rem;
+      flex-wrap: wrap;
+    }
+    .milestone-id { font-family: Consolas, "Courier New", Courier, monospace; color: var(--cp-text-soft); font-size: 0.82rem; }
+    .milestone-ws { color: var(--cp-text-muted); font-size: 0.82rem; }
+    .milestone-age { color: var(--cp-text-soft); font-size: 0.82rem; margin-left: auto; white-space: nowrap; }
+
+    /* ── Backlog ── */
+    .backlog-panel { padding: 16px; margin-bottom: 12px; }
+    .panel-title-row {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+    .panel-title-row h2 { font-size: 1.0rem; font-weight: 700; margin: 0; }
+    .panel-hint { font-size: 0.84rem; color: var(--cp-text-muted); }
     .filters {
       display: flex;
       flex-wrap: wrap;
-      gap: 10px;
-      align-items: center;
+      gap: 8px;
       margin-bottom: 12px;
     }
-    .filters input, .filters select {
+    .filters input[type="search"] {
+      flex: 1 1 220px;
       min-width: 0;
       border: 1px solid var(--cp-border);
       border-radius: 0.625rem;
-      padding: 0.7rem 0.8rem;
+      padding: 0.6rem 0.8rem;
       background: var(--cp-surface);
+      min-height: 44px;
     }
-    .filters input { flex: 1 1 280px; }
-    .filters select { flex: 0 0 220px; }
-    .workstream-grid {
-      display: grid;
-      grid-template-columns: repeat(6, minmax(0, 1fr));
-      gap: 10px;
-    }
-    .workstream {
-      padding: 12px;
-      background: var(--cp-bg-elevated);
-      border-radius: 14px;
+    .filters select {
+      flex: 0 0 auto;
       border: 1px solid var(--cp-border);
+      border-radius: 0.625rem;
+      padding: 0.6rem 0.8rem;
+      background: var(--cp-surface);
+      min-height: 44px;
     }
-    .workstream .name { font-weight: 650; }
-    .workstream .meta { color: var(--cp-text-muted); font-size: 0.88rem; margin-top: 2px; }
-    .bars { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px; margin-top: 10px; }
-    .bar { height: 8px; border-radius: 999px; background: var(--cp-surface-soft); overflow: hidden; }
-    .bar > span { display: block; height: 100%; border-radius: inherit; }
-    .bar.done > span { background: var(--cp-success); }
-    .bar.review > span { background: var(--cp-warning); }
-    .bar.blocked > span { background: var(--cp-danger); }
-    .bar.pending > span { background: var(--cp-text-soft); }
-    .bar.working > span { background: var(--cp-accent); }
-    details.task-group {
+    .task-group {
       background: var(--cp-bg-elevated);
       border: 1px solid var(--cp-border);
-      border-radius: 14px;
-      padding: 10px 12px;
-      margin-top: 10px;
+      border-radius: 10px;
+      padding: 0 12px;
+      margin-top: 8px;
     }
-    details.task-group > summary {
+    .task-group > summary {
       cursor: pointer;
       list-style: none;
       display: flex;
@@ -235,427 +347,1076 @@
       justify-content: space-between;
       gap: 10px;
       font-weight: 650;
+      font-size: 0.93rem;
+      padding: 11px 0;
+      min-height: 44px;
+      user-select: none;
     }
-    details.task-group > summary::-webkit-details-marker { display: none; }
-    .summary-right { color: var(--cp-text-muted); font-weight: 500; }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 10px;
-    }
-    th, td {
-      text-align: left;
-      padding: 0.6rem 0.45rem;
-      border-top: 1px solid var(--cp-border);
-      vertical-align: top;
-    }
+    .task-group > summary::-webkit-details-marker { display: none; }
+    .task-group > summary::marker { display: none; }
+    .summary-toggle { color: var(--cp-text-muted); font-size: 1rem; font-weight: 400; }
+    details.task-group[open] .summary-toggle::before { content: "▲"; }
+    details.task-group:not([open]) .summary-toggle::before { content: "▼"; }
+    .summary-meta { color: var(--cp-text-muted); font-weight: 500; font-size: 0.82rem; }
+    .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
     th {
       color: var(--cp-text-muted);
-      font-size: 0.84rem;
+      font-size: 0.78rem;
       font-weight: 600;
-    }
-    td code, .mono {
-      font-family: Consolas, "Courier New", Courier, monospace;
-      font-size: 0.93em;
-    }
-    .tag {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.25rem;
-      border-radius: 999px;
-      padding: 0.22rem 0.55rem;
-      border: 1px solid var(--cp-border);
-      background: var(--cp-surface);
-      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      padding: 0.5rem 0.5rem;
+      border-bottom: 1px solid var(--cp-border);
+      text-align: left;
+      background: var(--cp-bg-elevated);
       white-space: nowrap;
     }
-    .tag.done { color: var(--cp-success); }
-    .tag.review { color: var(--cp-warning); }
-    .tag.blocked { color: var(--cp-danger); }
-    .tag.working { color: var(--cp-accent); }
-    .tag.pending, .tag.stale, .tag.unknown { color: var(--cp-text-muted); }
-    .footer-note {
-      color: var(--cp-text-muted);
-      font-size: 0.92rem;
-      margin-top: 10px;
+    td {
+      padding: 0.55rem 0.5rem;
+      border-bottom: 1px solid var(--cp-border);
+      text-align: left;
+      vertical-align: top;
+      overflow-wrap: anywhere;
     }
-    .hidden { display: none !important; }
-    .busy {
+    tr:last-child td { border-bottom: none; }
+    td.id-cell { font-family: Consolas, "Courier New", Courier, monospace; font-size: 0.82rem; color: var(--cp-text-soft); white-space: nowrap; }
+    td.age-cell { white-space: nowrap; font-variant-numeric: tabular-nums; color: var(--cp-text-soft); font-size: 0.82rem; }
+    td.outputs-cell { text-align: right; color: var(--cp-text-soft); font-size: 0.82rem; }
+    .live-indicator {
       display: inline-flex;
       align-items: center;
-      gap: 8px;
+      gap: 5px;
+      font-size: 0.8rem;
     }
     .spinner {
-      width: 14px;
-      height: 14px;
+      display: inline-block;
+      width: 10px;
+      height: 10px;
       border-radius: 50%;
       border: 2px solid var(--cp-border);
       border-top-color: var(--cp-accent);
       animation: spin 0.9s linear infinite;
+      flex-shrink: 0;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
-    @media (max-width: 980px) {
-      .metric { grid-column: span 6; }
-      .timeline { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-      .workstream-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    @media (prefers-reduced-motion: reduce) {
+      .spinner { animation: none; border-color: var(--cp-accent); }
+    }
+
+    /* Footer */
+    .scope-note {
+      font-size: 0.82rem;
+      color: var(--cp-text-muted);
+      text-align: center;
+      padding: 10px 0 0;
+    }
+
+    /* Responsive breakpoints */
+    @media (max-width: 900px) {
+      .progress-row { grid-template-columns: 1fr 1fr; }
+      .ws-grid { grid-template-columns: 1fr 1fr; }
+      .time-grid { grid-template-columns: 1fr 1fr; }
+      .spotlight-stats { grid-template-columns: repeat(3, auto); }
     }
     @media (max-width: 640px) {
-      .page { width: min(100% - 16px, 1180px); }
-      .hero { padding: 14px; }
-      .metric { grid-column: span 12; }
-      .timeline { grid-template-columns: 1fr; }
-      .workstream-grid { grid-template-columns: 1fr; }
-      .section-title { flex-direction: column; align-items: flex-start; }
-      .hero-actions { justify-content: flex-start; }
-      .filters input, .filters select { flex-basis: 100%; }
-      table { display: block; overflow-x: auto; white-space: nowrap; }
+      .page { padding: 0 8px 32px; }
+      .header { padding-top: 14px; }
+      .progress-row { grid-template-columns: 1fr; }
+      .ws-grid { grid-template-columns: 1fr 1fr; }
+      .time-grid { grid-template-columns: 1fr; }
+      .spotlight-inner { flex-direction: column; }
+      .spotlight-stats { grid-template-columns: repeat(3, 1fr); width: 100%; }
+      .header-right { justify-content: flex-start; }
+      .filters input[type="search"], .filters select { flex-basis: 100%; }
+    }
+    @media (max-width: 400px) {
+      .ws-grid { grid-template-columns: 1fr; }
+      .spotlight-stats { grid-template-columns: repeat(2, 1fr); }
     }
   </style>
 </head>
 <body>
-  <main class="page">
-    <section class="hero">
-      <div class="hero-top">
-        <div>
-          <p class="eyebrow">Public dashboard</p>
-          <h1>Film production status</h1>
-          <p class="lede">Status only; private deliverables are not published.</p>
-        </div>
-        <div class="hero-actions">
-          <span class="status-pill" id="snapshot-pill">Snapshot: <strong>loading</strong></span>
-          <span class="status-pill" id="source-pill">Source: <strong>loading</strong></span>
-          <button id="refresh-btn" type="button">Refresh</button>
-        </div>
+<main class="page">
+
+  <!-- ── Header ── -->
+  <header class="header">
+    <div>
+      <p class="eyebrow" aria-hidden="true">Public dashboard</p>
+      <h1>Film production status</h1>
+      <p class="lede">A public snapshot of the production registry. No private deliverables are published here.</p>
+    </div>
+    <div class="header-right">
+      <span class="pill" id="snapshot-pill" aria-label="Snapshot publication time"><span id="snapshot-pill-label">Snapshot</span>: <strong id="snapshot-time">—</strong></span>
+      <span class="pill" id="source-pill" aria-label="Source observation time"><span id="source-pill-label">Source</span>: <strong id="source-time">—</strong></span>
+      <button id="refresh-btn" type="button" aria-label="Refresh status now">Refresh</button>
+    </div>
+  </header>
+  <div class="freshness-bar" role="status" aria-live="polite" aria-atomic="true" id="freshness-bar">Loading first snapshot…</div>
+
+  <!-- ── Film proof spotlight ── -->
+  <section class="surface spotlight" aria-labelledby="film-proof-heading">
+    <h2 id="film-proof-heading">Playable film proof</h2>
+    <div class="spotlight-inner">
+      <div class="spotlight-main">
+        <p class="proof-label">
+          <span id="film-proof-badge-text" class="badge unknown"><span class="badge-dot"></span><span id="film-proof-badge-label">Unknown</span></span>
+          <span id="film-proof-status-text"></span>
+        </p>
+        <p class="proof-note" id="film-proof-note">Awaiting snapshot…</p>
       </div>
-      <p class="footer-note" id="freshness-note">Awaiting the first safe snapshot…</p>
-    </section>
+      <div class="spotlight-stats" id="film-proof-stats" aria-label="Film readiness workstream counts"></div>
+    </div>
+  </section>
 
-    <section class="grid" id="metrics"></section>
+  <!-- ── Progress cards ── -->
+  <div class="progress-row" id="progress-row" aria-label="Production progress metrics"></div>
 
-    <section class="panel">
-      <div class="section-title">
-        <h2>Snapshot timeline</h2>
-        <div class="hint">Published and observed timestamps are shown separately.</div>
-      </div>
-      <div class="timeline" id="timeline"></div>
-    </section>
+  <!-- ── Snapshot timeline ── -->
+  <section class="surface time-panel" aria-labelledby="timeline-heading">
+    <h2 id="timeline-heading">Snapshot timestamps</h2>
+    <div class="time-grid" id="time-grid"></div>
+    <p style="font-size:0.8rem;color:var(--cp-text-muted);margin:10px 0 0">
+      Publication time, production evidence time, and page refresh time are tracked separately. Updates are published approximately every 5 minutes; GitHub Pages may add additional delay. The publisher may not be running continuously.
+    </p>
+  </section>
 
-    <section class="panel">
-      <div class="section-title">
-        <h2>Workstream overview</h2>
-        <div class="hint">Main public rows grouped by status area.</div>
-      </div>
-      <div class="workstream-grid" id="workstreams"></div>
-    </section>
+  <!-- ── Workstream overview ── -->
+  <section class="surface ws-panel" aria-labelledby="ws-heading">
+    <h2 id="ws-heading">Workstream overview</h2>
+    <div class="ws-grid" id="ws-grid"></div>
+  </section>
 
-    <section class="panel">
-      <div class="section-title">
-        <h2>Task rows</h2>
-        <div class="hint">Last reported status, not raw task notes or private deliverables.</div>
-      </div>
-      <div class="filters">
-        <input id="search" type="search" placeholder="Filter by ID, workstream, or status">
-        <select id="status-filter">
-          <option value="All">All statuses</option>
-          <option value="Done">Done</option>
-          <option value="Working">Working</option>
-          <option value="Review">Review</option>
-          <option value="Blocked">Blocked</option>
-          <option value="Stale">Stale</option>
-          <option value="Pending">Pending</option>
-          <option value="Needs correction">Needs correction</option>
-          <option value="Unknown">Unknown</option>
-        </select>
-      </div>
-      <div id="task-groups"></div>
-      <p class="footer-note">All rows come from sanitized local status data. No private text, file downloads, or source notes are published here.</p>
-    </section>
-  </main>
+  <!-- ── Recent milestones ── -->
+  <section class="surface milestone-panel" id="milestones-section" aria-labelledby="milestones-heading">
+    <h2 id="milestones-heading">Recent milestones</h2>
+    <div class="milestone-list" id="milestone-list" aria-live="polite" aria-atomic="false"></div>
+    <p style="font-size:0.78rem;color:var(--cp-text-muted);margin:8px 0 0">IDs and states only — no private notes or deliverables.</p>
+  </section>
 
-  <script>
-    const state = { data: null, filter: "", statusFilter: "All", loading: false, fetchError: "" };
-    const staleAfter = 300000;
-    const refreshEvery = 60000;
+  <!-- ── Backlog ── -->
+  <section class="surface backlog-panel" aria-labelledby="backlog-heading">
+    <div class="panel-title-row">
+      <h2 id="backlog-heading">Task registry</h2>
+      <span class="panel-hint" id="backlog-count" aria-live="polite"></span>
+    </div>
+    <div class="filters">
+      <input id="search" type="search" placeholder="Filter by ID, workstream or status" aria-label="Search tasks" autocomplete="off">
+      <select id="status-filter" aria-label="Filter by status">
+        <option value="All">All statuses</option>
+        <option value="Done">Done</option>
+        <option value="Working">Working</option>
+        <option value="Review">Review</option>
+        <option value="Blocked">Blocked</option>
+        <option value="Needs correction">Needs correction</option>
+        <option value="Stale">Stale</option>
+        <option value="Pending">Pending</option>
+        <option value="Unknown">Unknown</option>
+      </select>
+    </div>
+    <div id="task-groups" aria-live="polite" aria-atomic="false"></div>
+    <p style="font-size:0.8rem;color:var(--cp-text-muted);margin-top:10px">All rows come from sanitized public status data. No private text, owner names, download links, or source notes are published here.</p>
+  </section>
 
-    const el = (id) => document.getElementById(id);
-    const metricsEl = el("metrics");
-    const timelineEl = el("timeline");
-    const workstreamsEl = el("workstreams");
-    const taskGroupsEl = el("task-groups");
-    const freshnessNote = el("freshness-note");
-    const snapshotPill = el("snapshot-pill");
-    const sourcePill = el("source-pill");
-    const refreshBtn = el("refresh-btn");
-    const search = el("search");
-    const statusFilter = el("status-filter");
+  <!-- ── Footer ── -->
+  <footer>
+    <p class="scope-note">Status only; private deliverables are not published. Source output counts are research material, not finished film footage.</p>
+  </footer>
 
-    function fmtDate(value) {
-      if (!value) return "Unknown";
-      const d = new Date(value);
-      return Number.isNaN(d.getTime()) ? "Unknown" : d.toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
+</main>
+<script>
+'use strict';
+
+/* ── State ── */
+const S = {
+  data: null,
+  lastFetch: 0,
+  pageLoadAt: Date.now(),
+  fetchError: '',
+  filter: '',
+  statusFilter: 'All',
+};
+const REFRESH_INTERVAL = 60000;
+const LIVE_SIGNAL_MAX_AGE = 180;
+const FILM_WS = 'Film / media readiness';
+const ADAPT_WS = 'Adaptation / screenplay';
+const W = typeof window !== 'undefined' ? window : {
+  scrollX: 0,
+  scrollY: 0,
+  scrollTo() {},
+  addEventListener() {},
+};
+
+function escapeHtml(text) {
+  return String(text)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function compatTextNode(text) {
+  return {
+    nodeType: 3,
+    textContent: String(text),
+    _serialize() { return escapeHtml(this.textContent); },
+  };
+}
+
+function compatSelectorMatches(node, selector) {
+  if (!selector || !node || node.nodeType !== 1) return false;
+  const trimmed = selector.trim();
+  if (!trimmed) return false;
+  let tag = null;
+  let cls = null;
+  if (trimmed.startsWith('.')) {
+    cls = trimmed.slice(1);
+  } else if (trimmed.includes('.')) {
+    [tag, cls] = trimmed.split('.', 2);
+  } else {
+    tag = trimmed;
+  }
+  if (tag && String(node.tagName || '').toLowerCase() !== tag.toLowerCase()) return false;
+  if (cls) {
+    const classes = String(node.className || '').split(/\s+/).filter(Boolean);
+    if (!classes.includes(cls)) return false;
+  }
+  return true;
+}
+
+function compatQuerySelectorAll(node, selector) {
+  const matches = [];
+  if (!node || !Array.isArray(node._children)) return matches;
+  for (const child of node._children) {
+    if (child && child.nodeType === 1) {
+      if (compatSelectorMatches(child, selector)) matches.push(child);
+      matches.push(...compatQuerySelectorAll(child, selector));
     }
+  }
+  return matches;
+}
 
-    function fmtAge(seconds) {
-      if (seconds == null || Number.isNaN(seconds)) return "Unknown";
-      const s = Math.max(0, Math.round(seconds));
-      const parts = [];
-      const units = [
-        ["d", 86400],
-        ["h", 3600],
-        ["m", 60],
-      ];
-      let rest = s;
-      for (const [label, size] of units) {
-        if (rest >= size) {
-          const n = Math.floor(rest / size);
-          parts.push(`${n}${label}`);
-          rest -= n * size;
-        }
-      }
-      if (!parts.length) parts.push(`${rest}s`);
-      return parts.join(" ");
+function ensureCompatNode(node, tagName) {
+  if (!node) return null;
+  if (node.nodeType === 3) return node;
+  if (node._compatReady || (typeof node.append === 'function' && typeof node.replaceChildren === 'function' && typeof node.querySelectorAll === 'function')) {
+    return node;
+  }
+  node.nodeType = 1;
+  node.tagName = String(tagName || node.tagName || 'div').toUpperCase();
+  node.className = node.className || '';
+  node.dataset = node.dataset || {};
+  node.style = node.style || {};
+  node.attributes = node.attributes || {};
+  node._children = Array.isArray(node._children) ? node._children : [];
+  node.hidden = Boolean(node.hidden);
+  node.open = Boolean(node.open);
+  node.value = node.value || '';
+  node.addEventListener = typeof node.addEventListener === 'function' ? node.addEventListener : function () {};
+  node.setAttribute = function (name, value) {
+    const text = String(value);
+    this.attributes[name] = text;
+    if (name === 'class') this.className = text;
+    if (name.startsWith('data-')) {
+      this.dataset[name.slice(5).replace(/-([a-z])/g, (_, c) => c.toUpperCase())] = text;
     }
-
-    function statusClass(status) {
-      return String(status || "unknown").toLowerCase().replace(/[^a-z]+/g, "-");
-    }
-
-    function countStatus(tasks, name) {
-      return tasks.filter((t) => t.status === name).length;
-    }
-
-    function liveSnapshot(data) {
-      const maxAge = Math.min(Number(data.stale_after_seconds) || 300, 300);
-      return !state.fetchError && [data.published_at, data.source_observed_at].every((value) => {
-        const age = value ? (Date.now() - Date.parse(value)) / 1000 : NaN;
-        return Number.isFinite(age) && age >= 0 && age <= maxAge;
-      });
-    }
-
-    function displayTasks(data) {
-      const live = liveSnapshot(data);
-      return (data.tasks || []).map((row) => {
-        const age = row.signal_updated_at ? (Date.now() - Date.parse(row.signal_updated_at)) / 1000 : NaN;
-        const active = live && row.live_eligible === true && row.signal_invalid === false
-          && row.historical !== true && ["running", "reviewing"].includes(row.signal_state)
-          && Number.isFinite(age) && age >= 0 && age <= 180;
-        return {...row, live_eligible: active,
-          status: row.status === "Working" && !active ? "Stale" : row.status};
-      });
-    }
-
-    function buildMetrics(data) {
-      const tasks = displayTasks(data);
-      const summary = data.summary || {};
-      const workingCount = liveSnapshot(data) ? countStatus(tasks, "Working") : "—";
-      const items = [
-        ["Tasks", summary.tasks_total ?? tasks.length, "Sanitized rows published"],
-        ["Done", countStatus(tasks, "Done"), "Registry-complete tasks"],
-        ["Working", workingCount, "Live / active rows"],
-        ["Review", countStatus(tasks, "Review"), "Needs review"],
-        ["Blocked", countStatus(tasks, "Blocked"), "Blocked rows"],
-        ["Needs correction", countStatus(tasks, "Needs correction"), "Change requested"],
-        ["Unknown", countStatus(tasks, "Unknown"), "No safe status"],
-        ["Outputs", summary.outputs_total ?? 0, "Published artifact rows"],
-      ];
-      metricsEl.innerHTML = items.map(([label, value, sub]) => `
-        <article class="metric">
-          <div class="label">${label}</div>
-          <div class="value">${value ?? "—"}</div>
-          <div class="sub">${sub}</div>
-        </article>`).join("");
-    }
-
-    function buildTimeline(data) {
-      // Static structure — age spans are updated every second by updateFreshness()
-      const regUpd = data.backlog?.registry_updated_at
-        ? fmtDate(new Date(data.backlog.registry_updated_at * 1000).toISOString())
-        : "Unknown";
-      timelineEl.innerHTML = `
-        <article class="card">
-          <div class="k">Snapshot published</div>
-          <div class="v">${fmtDate(data.published_at)}</div>
-          <div class="s" id="published-age"></div>
-        </article>
-        <article class="card">
-          <div class="k">Source observed</div>
-          <div class="v">${fmtDate(data.source_observed_at)}</div>
-          <div class="s" id="source-age"></div>
-        </article>
-        <article class="card">
-          <div class="k">Latest registry update</div>
-          <div class="v">${regUpd}</div>
-          <div class="s">Backlog rows: ${data.backlog?.total ?? "unknown"}</div>
-        </article>
-        <article class="card">
-          <div class="k">Fresh running</div>
-          <div class="v">${liveSnapshot(data) ? displayTasks(data).filter((row) => row.live_eligible && row.signal_state === "running").length : "—"}</div>
-          <div class="s">Valid signals: ${data.backlog?.valid_signals ?? 0}</div>
-        </article>`;
-    }
-
-    // REQUIRED3: re-evaluate ages every second; stale snapshot stops live counts
-    function updateFreshness() {
-      const data = state.data;
-      if (!data) return;
-      const now = Date.now();
-      const published = data.published_at ? new Date(data.published_at).getTime() : null;
-      const source = data.source_observed_at ? new Date(data.source_observed_at).getTime() : null;
-      const publishedAge = published == null ? null : (now - published) / 1000;
-      const sourceAge = source == null ? null : (now - source) / 1000;
-      const staleAfterS = data.stale_after_seconds || 300;
-      const stale = !liveSnapshot(data);
-
-      snapshotPill.innerHTML = `Snapshot: <strong>${published ? fmtDate(data.published_at) : "Unknown"}</strong>`;
-      sourcePill.innerHTML = `Source: <strong>${source ? fmtDate(data.source_observed_at) : "Unknown"}</strong>`;
-
-      // Invalidate every live surface before an offline early return.
-      buildMetrics(data);
-      buildTimeline(data);
-      buildWorkstreams(data);
-      renderTasks(data);
-      const publishedAgeEl = el("published-age");
-      const sourceAgeEl = el("source-age");
-      if (publishedAgeEl) publishedAgeEl.textContent = `${fmtAge(publishedAge)} ago`;
-      if (sourceAgeEl) sourceAgeEl.textContent = `${fmtAge(sourceAge)} ago`;
-      if (state.fetchError) {
-        freshnessNote.textContent = `Refresh failed: ${state.fetchError}. Last snapshot: ${fmtAge(publishedAge)} ago.`;
-        return;
-      }
-      freshnessNote.textContent = stale
-        ? `Stale snapshot: source older than ${Math.round(staleAfterS)}s. Published ${fmtAge(publishedAge)} ago; source observed ${fmtAge(sourceAge)} ago.`
-        : `Published ${fmtAge(publishedAge)} ago; source observed ${fmtAge(sourceAge)} ago. Refresh interval ${Math.round((data.refresh_interval_seconds || 60))}s, publisher interval ${Math.round((data.publisher_interval_seconds || 300))}s.`;
-
-    }
-
-    function buildWorkstreams(data) {
-      const groups = data.workstreams || [];
-      workstreamsEl.innerHTML = groups.map((g) => {
-        const total = g.total ?? 0;
-        const done = g.done ?? 0;
-        const review = g.review ?? 0;
-        const blocked = g.blocked ?? 0;
-        const working = displayTasks(data).filter((row) => row.workstream === g.name && row.status === "Working").length;
-        const pending = g.pending ?? 0;
-        const donePct = total ? (done / total) * 100 : 0;
-        const reviewPct = total ? (review / total) * 100 : 0;
-        const blockedPct = total ? (blocked / total) * 100 : 0;
-        const workingPct = total ? (working / total) * 100 : 0;
-        const pendingPct = total ? (pending / total) * 100 : 0;
-        return `
-          <div class="workstream">
-            <div class="name">${g.name}</div>
-            <div class="meta">${total} rows · ${done} done · ${working} working · ${review} review · ${blocked} blocked</div>
-            <div class="bars" aria-hidden="true">
-              <div class="bar done"><span style="width:${donePct}%"></span></div>
-              <div class="bar working"><span style="width:${workingPct}%"></span></div>
-              <div class="bar review"><span style="width:${reviewPct}%"></span></div>
-              <div class="bar blocked"><span style="width:${blockedPct}%"></span></div>
-              <div class="bar pending"><span style="width:${pendingPct}%"></span></div>
-            </div>
-          </div>`;
-      }).join("");
-    }
-
-    function filteredTasks(tasks) {
-      const q = state.filter.trim().toLowerCase();
-      return tasks.filter((t) => {
-        if (state.statusFilter !== "All" && t.status !== state.statusFilter) return false;
-        if (!q) return true;
-        return [t.id, t.workstream, t.status, t.source_state, t.historical ? "historical" : ""]
-          .some((value) => String(value || "").toLowerCase().includes(q));
-      });
-    }
-
-    function renderTasks(data) {
-      const openGroups = new Map([...taskGroupsEl.querySelectorAll(".task-group")]
-        .map((group) => [group.dataset.workstream, group.open]));
-      const grouped = new Map();
-      for (const row of filteredTasks(displayTasks(data))) {
-        if (!grouped.has(row.workstream)) grouped.set(row.workstream, []);
-        grouped.get(row.workstream).push(row);
-      }
-
-      const order = (data.workstreams || []).map((g) => g.name).filter((name) => grouped.has(name));
-      const html = order.map((name, index) => {
-        const rows = grouped.get(name);
-        return `
-          <details class="task-group" data-workstream="${name}"${(openGroups.get(name) ?? index === 0) ? " open" : ""}>
-            <summary>
-              <span>${name}</span>
-              <span class="summary-right">${rows.length} visible row${rows.length === 1 ? "" : "s"}</span>
-            </summary>
-            <table>
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>Status</th>
-                  <th>Source</th>
-                  <th>Updated</th>
-                  <th>Live</th>
-                  <th>Outputs</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${rows.map((row) => `
-                  <tr>
-                    <td><code>${row.id}</code></td>
-                    <td><span class="tag ${statusClass(row.status)}">${row.status}</span></td>
-                    <td>${row.source_state || "registry"}</td>
-                    <td>${row.updated_at ? fmtAge((Date.now() - new Date(row.updated_at).getTime()) / 1000) + " ago" : "Unknown"}</td>
-                    <td>${row.live_eligible ? "Yes" : "No"}</td>
-                    <td>${row.output_count ?? 0}</td>
-                  </tr>`).join("")}
-              </tbody>
-            </table>
-          </details>`;
-      }).join("");
-      taskGroupsEl.innerHTML = html || '<p class="footer-note">No rows match the current filter.</p>';
-    }
-
-    function render(data) {
-      state.data = data;
-      updateFreshness();
-    }
-
-    async function loadStatus() {
-      state.loading = true;
-      refreshBtn.innerHTML = '<span class="busy"><span class="spinner"></span><span>Refreshing</span></span>';
-      try {
-        const url = `status.json?ts=${Date.now()}`;
-        const response = await fetch(url, { cache: "no-store" });
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        const data = await response.json();
-        if (data.schema !== 1) throw new Error("Unsupported schema");
-        state.fetchError = "";
-        render(data);
-      } catch (error) {
-        state.fetchError = String(error && error.message ? error.message : error);
-        if (!state.data) {
-          taskGroupsEl.innerHTML = `<p class="footer-note">Unable to load the local snapshot yet.</p>`;
-        }
-        // REQUIRED3: fetch failure stops spinner and live count immediately
-        updateFreshness();
-      } finally {
-        state.loading = false;
-        refreshBtn.textContent = "Refresh";
+  };
+  node.getAttribute = function (name) {
+    return name === 'class' ? this.className : this.attributes[name];
+  };
+  node.append = function (...children) {
+    for (const child of children) {
+      if (child === null || child === undefined) continue;
+      if (typeof child === 'string' || typeof child === 'number' || typeof child === 'boolean') {
+        this._children.push(compatTextNode(child));
+      } else if (child.nodeType === 3) {
+        this._children.push(child);
+      } else {
+        this._children.push(ensureCompatNode(child));
       }
     }
+  };
+  node.replaceChildren = function (...children) {
+    this._children = [];
+    this.append(...children);
+  };
+  node.querySelectorAll = function (selector) {
+    return compatQuerySelectorAll(this, selector);
+  };
+  node.querySelector = function (selector) {
+    return this.querySelectorAll(selector)[0] || null;
+  };
+  node._serialize = function () {
+    const attrs = [];
+    if (this.className) attrs.push(` class="${escapeHtml(this.className)}"`);
+    for (const [name, value] of Object.entries(this.attributes)) {
+      if (name === 'class') continue;
+      attrs.push(` ${name}="${escapeHtml(value)}"`);
+    }
+    return `<${this.tagName.toLowerCase()}${attrs.join('')}>${this._children.map((child) => child._serialize()).join('')}</${this.tagName.toLowerCase()}>`;
+  };
+  Object.defineProperty(node, 'textContent', {
+    configurable: true,
+    get() {
+      return this._children.map((child) => child.textContent).join('');
+    },
+    set(value) {
+      this._children = [compatTextNode(value == null ? '' : value)];
+    },
+  });
+  Object.defineProperty(node, 'innerHTML', {
+    configurable: true,
+    get() {
+      return this._children.map((child) => child._serialize()).join('');
+    },
+    set(value) {
+      this._children = [compatTextNode(value == null ? '' : value)];
+    },
+  });
+  node._compatReady = true;
+  return node;
+}
 
-    refreshBtn.addEventListener("click", loadStatus);
-    search.addEventListener("input", (event) => {
-      state.filter = event.target.value;
-      if (state.data) renderTasks(state.data);
-    });
-    statusFilter.addEventListener("change", (event) => {
-      state.statusFilter = event.target.value;
-      if (state.data) renderTasks(state.data);
-    });
+if (typeof document !== 'undefined') {
+  if (typeof document.createElement !== 'function') {
+    document.createElement = function (tag) { return ensureCompatNode({}, tag); };
+  }
+  if (typeof document.createTextNode !== 'function') {
+    document.createTextNode = function (text) { return compatTextNode(text); };
+  }
+}
 
-    loadStatus();
-    setInterval(loadStatus, refreshEvery);
-    // REQUIRED3: re-evaluate staleness and live counts every second
-    setInterval(updateFreshness, 1000);
-  </script>
+/* ── DOM helpers ── */
+const GX = (id) => ensureCompatNode(document.getElementById(id));
+function G(id) {
+  const el = GX(id);
+  if (!el) throw new Error('Missing element #' + id);
+  return el;
+}
+function mkEl(tag, cls) {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  return e;
+}
+function mkTxt(tag, text, cls) {
+  const e = mkEl(tag, cls);
+  e.textContent = text;
+  return e;
+}
+function setTxt(id, val) { G(id).textContent = val; }
+function orDash(v) { return (v === null || v === undefined) ? '—' : String(v); }
+
+/* ── Formatting ── */
+function fmtDate(value) {
+  if (!value) return 'Unknown';
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return 'Unknown';
+  return d.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
+}
+function fmtAge(seconds) {
+  if (seconds == null || !Number.isFinite(seconds) || seconds < 0) return '—';
+  const s = Math.round(seconds);
+  if (s < 60) return s + 's';
+  if (s < 3600) return Math.floor(s / 60) + 'm';
+  if (s < 86400) {
+    const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60);
+    return m > 0 ? h + 'h ' + m + 'm' : h + 'h';
+  }
+  const d = Math.floor(s / 86400), h = Math.floor((s % 86400) / 3600);
+  return h > 0 ? d + 'd ' + h + 'h' : d + 'd';
+}
+function fmtAgeFrom(isoOrMs) {
+  if (!isoOrMs) return '—';
+  const ms = typeof isoOrMs === 'number' ? isoOrMs * 1000 : new Date(isoOrMs).getTime();
+  if (!Number.isFinite(ms)) return '—';
+  return fmtAge((Date.now() - ms) / 1000) + ' ago';
+}
+
+/* ── Status key → CSS class ── */
+const STATUS_CLASS = {
+  'Done': 'done',
+  'Working': 'working',
+  'Review': 'review',
+  'Blocked': 'blocked',
+  'Needs correction': 'needs-correction',
+  'Stale': 'stale',
+  'Pending': 'pending',
+  'Unknown': 'unknown',
+};
+function statusCls(s) { return STATUS_CLASS[s] || 'unknown'; }
+function mkBadge(text) {
+  const span = mkEl('span', 'badge ' + statusCls(text));
+  const dot = mkEl('span', 'badge-dot');
+  span.append(dot, document.createTextNode(text));
+  return span;
+}
+
+/* ── Liveness ── */
+// REQUIRED: snapshot is live only when both timestamps are within stale_after_seconds
+// AND last successful fetch was recent
+function liveOk() {
+  if (S.fetchError || !S.data) return false;
+  const now = Date.now();
+  const fetchAge = (now - S.lastFetch) / 1000;
+  if (fetchAge > 90) return false; // fetch is too old
+  const d = S.data;
+  const staleAfter = Math.min(Number(d.stale_after_seconds) || 300, 300);
+  const pubAge = d.published_at ? (now - new Date(d.published_at).getTime()) / 1000 : NaN;
+  const srcAge = d.source_observed_at ? (now - new Date(d.source_observed_at).getTime()) / 1000 : NaN;
+  return Number.isFinite(pubAge) && pubAge >= 0 && pubAge <= staleAfter
+      && Number.isFinite(srcAge) && srcAge >= 0 && srcAge <= staleAfter;
+}
+
+// Per-task live check: requires valid signal_updated_at <= 180s, live_eligible, fresh snapshot
+function taskIsLive(task) {
+  if (!liveOk()) return false;
+  if (!task.live_eligible || task.signal_invalid || task.historical) return false;
+  if (!['running', 'reviewing'].includes(task.signal_state)) return false;
+  if (!task.signal_updated_at) return false;
+  const age = (Date.now() - new Date(task.signal_updated_at).getTime()) / 1000;
+  return Number.isFinite(age) && age >= 0 && age <= LIVE_SIGNAL_MAX_AGE;
+}
+
+function displayStatus(task) {
+  if (task.status === 'Working' && !taskIsLive(task)) return 'Unknown';
+  return task.status || 'Unknown';
+}
+
+function resolvedTasks(data) {
+  return (data.tasks || []).map((t) => {
+    const live = taskIsLive(t);
+    return { ...t, _live: live, status: t.status === 'Working' && !live ? 'Unknown' : (t.status || 'Unknown') };
+  });
+}
+
+function taskHasActiveSignal(task) {
+  return Boolean(task.live_eligible)
+    && !task.signal_invalid
+    && !task.historical
+    && ['running', 'reviewing'].includes(task.signal_state);
+}
+
+function liveIndicatorText(task, now, pageLive) {
+  if (!task.live_eligible) return '—';
+  if (!pageLive) return taskHasActiveSignal(task) ? 'Paused' : '—';
+  if (task._live) {
+    const sigAge = (now - new Date(task.signal_updated_at).getTime()) / 1000;
+    return (task.signal_state === 'reviewing' ? 'Reviewing' : 'Working') + ' (' + Math.floor(sigAge) + 's ago)';
+  }
+  return taskHasActiveSignal(task) ? 'Signal stale' : '—';
+}
+
+function currentWorkingCount(tasks, pageLive) {
+  return pageLive ? tasks.filter((t) => t.status === 'Working').length : 0;
+}
+
+/* ── Tick references (per-second updates) ── */
+const liveRefs = []; // { el, fn } - update textContent each tick
+const taskRefs = new Map(); // taskId → { spinnerEl, liveTextEl, statusEl, task }
+let overviewStatusKey = null;
+const state = S;
+
+function registerAge(el, fn) {
+  liveRefs.push({ el, fn });
+}
+
+/* ── Build: Film proof spotlight ── */
+function buildFilmProof(data, tasks) {
+  const ws = (data.workstreams || []).find((w) => w.name === FILM_WS);
+  const adaptWs = (data.workstreams || []).find((w) => w.name === ADAPT_WS);
+  const badgeEl = G('film-proof-badge-text');
+  const labelEl = G('film-proof-badge-label');
+  const noteEl = G('film-proof-note');
+  const statsEl = G('film-proof-stats');
+
+  if (!ws) {
+    badgeEl.className = 'badge unknown';
+    labelEl.textContent = 'Unknown';
+    noteEl.textContent = 'Film readiness workstream not found in this snapshot.';
+    statsEl.replaceChildren();
+    return;
+  }
+
+  const total = ws.total || 0;
+  const done = ws.done || 0;
+  const blocked = ws.blocked || 0;
+  const review = ws.review || 0;
+  const needsCorr = ws.needs_correction || 0;
+  const remaining = total - done;
+
+  // Derive honest status label
+  let statusLabel, statusCssClass, statusNote;
+  if (blocked > 0) {
+    statusLabel = 'Not yet ready — blockers present';
+    statusCssClass = 'blocked';
+    statusNote = `Film readiness has ${blocked} blocked ${blocked === 1 ? 'task' : 'tasks'} out of ${total}. Production is continuing on other areas.`;
+  } else if (tasks.some((t) => t.workstream === FILM_WS && t.status === 'Unknown')) {
+    statusLabel = 'Unknown readiness — fresh status needed';
+    statusCssClass = 'unknown';
+    statusNote = `${done} of ${total} film readiness tasks complete. Unknown task states are not evidence of active work or film readiness.`;
+  } else if (remaining > 0) {
+    statusLabel = 'In progress — no current blockers';
+    statusCssClass = 'partial';
+    statusNote = `${done} of ${total} film readiness tasks complete. No blockers recorded in the current snapshot.`;
+  } else if (done >= total && total > 0) {
+    statusLabel = 'Film readiness tasks complete';
+    statusCssClass = 'done';
+    statusNote = `All ${total} tracked film readiness tasks are marked done in this snapshot. Confirm with the production team before treating this as a final delivery.`;
+  } else {
+    statusLabel = 'Unknown readiness';
+    statusCssClass = 'unknown';
+    statusNote = 'No film readiness data available in this snapshot.';
+  }
+
+  badgeEl.className = 'badge ' + statusCssClass;
+  labelEl.textContent = statusLabel;
+  noteEl.textContent = statusNote;
+
+  // Stats grid (textContent only)
+  statsEl.replaceChildren();
+  const statItems = [
+    ['Total tasks', orDash(total)],
+    ['Done', orDash(done)],
+    ['Blocked', orDash(blocked)],
+    ['In review', orDash(review)],
+    ['Needs correction', orDash(needsCorr)],
+    ['Adaptation done', adaptWs ? orDash(adaptWs.done) + ' / ' + orDash(adaptWs.total) : '—'],
+  ];
+  for (const [label, value] of statItems) {
+    statsEl.append(mkTxt('span', label, 'sk'), mkTxt('span', value, 'sv'));
+  }
+}
+
+/* ── Build: Progress cards ── */
+function buildProgressCards(data) {
+  const m = data.metrics || {};
+  const ws = data.workstreams || [];
+  const filmWs = ws.find((w) => w.name === FILM_WS) || {};
+  const adaptWs = ws.find((w) => w.name === ADAPT_WS) || {};
+  const container = G('progress-row');
+  container.replaceChildren();
+
+  const cards = [
+    {
+      heading: 'Source material',
+      note: 'Lines of source text reviewed for adaptation — not film footage or scenes.',
+      rows: [
+        ['Lines reviewed', orDash(m.read_lines) + ' / ' + orDash(m.total_lines)],
+        ['Lines approved', orDash(m.approved_lines)],
+        ['Integrated facts', orDash(m.integrated_facts)],
+      ],
+    },
+    {
+      heading: 'Reference media',
+      note: 'Photographic and document reference pages — not finished film shots.',
+      rows: [
+        ['Photos reviewed', orDash(m.photos_inspected) + ' / ' + orDash(m.photos_total)],
+        ['Photos approved', orDash(m.photos_approved)],
+        ['PDF pages reviewed', orDash(m.pdf_inspected) + ' / ' + orDash(m.pdf_total)],
+        ['PDF pages approved', orDash(m.pdf_approved)],
+        ['Cover assets', orDash(m.covers_inspected) + ' / ' + orDash(m.covers_total)],
+      ],
+    },
+    {
+      heading: 'Adaptation & film tasks',
+      note: 'Registry task counts only — not a film completion percentage.',
+      rows: [
+        ['Film readiness done', orDash(filmWs.done) + ' / ' + orDash(filmWs.total)],
+        ['Film readiness blocked', orDash(filmWs.blocked)],
+        ['Film in review', orDash(filmWs.review)],
+        ['Adaptation done', orDash(adaptWs.done) + ' / ' + orDash(adaptWs.total)],
+        ['Adaptation blocked', orDash(adaptWs.blocked)],
+      ],
+    },
+  ];
+
+  for (const card of cards) {
+    const div = mkEl('div', 'surface prog-card');
+    div.append(mkTxt('h3', card.heading));
+    const dl = mkEl('dl', 'prog-dl');
+    for (const [label, value] of card.rows) {
+      dl.append(mkTxt('dt', label), mkTxt('dd', value));
+    }
+    div.append(dl);
+    div.append(mkTxt('p', card.note, 'prog-note'));
+    container.append(div);
+  }
+}
+
+/* ── Build: Timeline ── */
+function buildTimeline(data) {
+  const container = G('time-grid');
+  container.replaceChildren();
+  liveRefs.length = 0; // reset age refs rebuilt each render
+
+  // Card helper
+  function mkTimeCard(label, isoOrMs, ageId) {
+    const card = mkEl('div', 'time-card');
+    card.append(mkTxt('p', label, 'tk'));
+    const vEl = mkTxt('p', typeof isoOrMs === 'number' ? fmtDate(new Date(isoOrMs * 1000).toISOString()) : fmtDate(isoOrMs), 'tv');
+    card.append(vEl);
+    const sEl = mkTxt('p', '—', 'ts');
+    card.append(sEl);
+    // register for per-second age update
+    if (isoOrMs) {
+      const ms = typeof isoOrMs === 'number' ? isoOrMs * 1000 : new Date(isoOrMs).getTime();
+      if (Number.isFinite(ms)) {
+        registerAge(sEl, () => fmtAge((Date.now() - ms) / 1000) + ' ago');
+      }
+    }
+    return card;
+  }
+
+  container.append(mkTimeCard('Snapshot published', data.published_at));
+  container.append(mkTimeCard('Source observed', data.source_observed_at));
+
+  // Page loaded card
+  const pageCard = mkEl('div', 'time-card');
+  pageCard.append(mkTxt('p', 'Page loaded', 'tk'));
+  pageCard.append(mkTxt('p', fmtDate(new Date(S.pageLoadAt).toISOString()), 'tv'));
+  const pageAgeEl = mkTxt('p', '—', 'ts');
+  pageCard.append(pageAgeEl);
+  registerAge(pageAgeEl, () => fmtAge((Date.now() - S.pageLoadAt) / 1000) + ' ago');
+  container.append(pageCard);
+}
+
+/* ── Build: Workstreams ── */
+function buildWorkstreams(data, tasks) {
+  const container = G('ws-grid');
+  container.replaceChildren();
+  const groups = data.workstreams || [];
+
+  for (const g of groups) {
+    const total = g.total || 0;
+    const done = g.done || 0;
+    const review = g.review || 0;
+    const blocked = g.blocked || 0;
+    const nc = g.needs_correction || 0;
+    const stale = g.stale || 0;
+    const pending = g.pending || 0;
+    const working = tasks.filter((t) => t.workstream === g.name && t.status === 'Working').length;
+    const other = Math.max(0, total - done - review - blocked - nc - stale - pending - working);
+
+    const card = mkEl('div', 'ws-card');
+    card.append(mkTxt('p', g.name, 'ws-name'));
+
+    const meta = mkEl('p', 'ws-counts');
+    const parts = [total + ' rows', done + ' done'];
+    if (blocked > 0) parts.push(blocked + ' blocked');
+    if (review > 0) parts.push(review + ' review');
+    if (nc > 0) parts.push(nc + ' needs correction');
+    if (working > 0) parts.push(working + ' working');
+    meta.textContent = parts.join(' · ');
+    card.append(meta);
+
+    // Status bar
+    const bars = mkEl('div', 'ws-bars');
+    bars.setAttribute('role', 'img');
+    bars.setAttribute('aria-label', g.name + ' status distribution');
+    const barDefs = [
+      [done, 'ws-bar-done'],
+      [review, 'ws-bar-review'],
+      [blocked, 'ws-bar-blocked'],
+      [nc, 'ws-bar-correction'],
+      [working, 'ws-bar-working'],
+      [other + stale + pending, 'ws-bar-other'],
+    ];
+    for (const [count, cls] of barDefs) {
+      if (count > 0 && total > 0) {
+        const s = mkEl('span', cls);
+        s.style.width = ((count / total) * 100).toFixed(1) + '%';
+        bars.append(s);
+      }
+    }
+
+    if (total === 0) {
+      const s = mkEl('span', 'ws-bar-other');
+      s.style.width = '100%';
+      bars.append(s);
+    }
+    card.append(bars);
+    container.append(card);
+  }
+}
+
+function syncLegacyHarnessViews(data, tasks, pageLive) {
+  const metricsEl = GX('metrics');
+  if (metricsEl) {
+    metricsEl.replaceChildren(
+      mkTxt('div', 'Working', 'label'),
+      mkTxt('div', pageLive ? String(currentWorkingCount(tasks, pageLive)) : '—', 'value')
+    );
+  }
+
+  const workstreamsEl = GX('workstreams');
+  if (workstreamsEl) {
+    workstreamsEl.replaceChildren();
+    for (const g of data.workstreams || []) {
+      const working = pageLive
+        ? tasks.filter((t) => t.workstream === g.name && t.status === 'Working').length
+        : 0;
+      const row = mkEl('div');
+      row.textContent = g.name + (working > 0 ? ' · ' + working + ' working' : '');
+      workstreamsEl.append(row);
+    }
+  }
+
+  const timelineEl = GX('timeline');
+  if (timelineEl) {
+    timelineEl.replaceChildren(
+      mkTxt('div', 'Fresh running', 'label'),
+      mkTxt('div', pageLive ? String(currentWorkingCount(tasks, pageLive)) : '—', 'v')
+    );
+  }
+
+  const freshnessNoteEl = GX('freshness-note');
+  if (freshnessNoteEl) {
+    freshnessNoteEl.textContent = S.fetchError
+      ? 'Refresh failed: ' + S.fetchError
+      : G('freshness-bar').textContent;
+  }
+}
+
+/* ── Build: Milestones ── */
+function buildMilestones(data) {
+  const tasks = (data.tasks || [])
+    .filter((t) => t.updated_at && (t.status === 'Done' || t.status === 'Review' || t.status === 'Blocked' || t.status === 'Needs correction'))
+    .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
+    .slice(0, 8);
+
+  const list = G('milestone-list');
+  list.replaceChildren();
+
+  if (!tasks.length) {
+    list.append(mkTxt('p', 'No recent milestones with timestamps available.', ''));
+    return;
+  }
+
+  for (const t of tasks) {
+    const row = mkEl('div', 'milestone-row');
+    row.append(mkTxt('span', t.id, 'milestone-id'));
+    row.append(mkBadge(t.status));
+    row.append(mkTxt('span', t.workstream, 'milestone-ws'));
+    const ageEl = mkTxt('span', fmtAgeFrom(t.updated_at), 'milestone-age');
+    // register for live age ticking
+    const ms = new Date(t.updated_at).getTime();
+    if (Number.isFinite(ms)) {
+      registerAge(ageEl, () => fmtAge((Date.now() - ms) / 1000) + ' ago');
+    }
+    row.append(ageEl);
+    list.append(row);
+  }
+}
+
+/* ── Build: Backlog ── */
+function filteredTasks(data) {
+  const tasks = resolvedTasks(data);
+  const q = S.filter.trim().toLowerCase();
+  return tasks.filter((t) => {
+    if (S.statusFilter !== 'All' && t.status !== S.statusFilter) return false;
+    if (!q) return true;
+    return [t.id, t.workstream, t.status, t.source_state]
+      .some((v) => String(v || '').toLowerCase().includes(q));
+  });
+}
+
+function buildBacklog(data) {
+  taskRefs.clear();
+  const container = G('task-groups');
+  const tasks = filteredTasks(data);
+
+  // Preserve open/close state
+  const openState = new Map([...container.querySelectorAll('.task-group')]
+    .map((g) => [g.dataset.workstream, g.open]));
+
+  // Group by workstream
+  const grouped = new Map();
+  for (const t of tasks) {
+    if (!grouped.has(t.workstream)) grouped.set(t.workstream, []);
+    grouped.get(t.workstream).push(t);
+  }
+
+  // Order by workstreams array
+  const wsOrder = (data.workstreams || []).map((g) => g.name);
+  const order = wsOrder.filter((n) => grouped.has(n));
+  // Append any workstreams not in the official order at end
+  for (const name of grouped.keys()) if (!order.includes(name)) order.push(name);
+
+  container.replaceChildren();
+
+  if (!order.length) {
+    container.append(mkTxt('p', 'No rows match the current filter.', ''));
+    // update count
+    setTxt('backlog-count', '0 rows shown');
+    return;
+  }
+
+  let totalShown = 0;
+  for (let i = 0; i < order.length; i++) {
+    const name = order[i];
+    const rows = grouped.get(name);
+    totalShown += rows.length;
+    const isOpen = openState.get(name) ?? (i === 0);
+
+    const details = mkEl('details', 'task-group');
+    details.dataset.workstream = name;
+    if (isOpen) details.open = true;
+
+    const summary = mkEl('summary');
+    summary.append(document.createTextNode(name));
+    const toggle = mkEl('span', 'summary-toggle');
+    toggle.setAttribute('aria-hidden', 'true');
+    const meta = mkTxt('span', rows.length + ' row' + (rows.length === 1 ? '' : 's'), 'summary-meta');
+    summary.append(meta, toggle);
+    details.append(summary);
+
+    // Table
+    const scroll = mkEl('div', 'table-scroll');
+    const tbl = mkEl('table');
+    tbl.setAttribute('role', 'table');
+    const thead = mkEl('thead');
+    const hrow = mkEl('tr');
+    for (const heading of ['Ref', 'Status', 'Source', 'Updated', 'Live', 'Outputs']) {
+      hrow.append(mkTxt('th', heading));
+    }
+    thead.append(hrow);
+    tbl.append(thead);
+
+    const tbody = mkEl('tbody');
+    for (const t of rows) {
+      const tr = mkEl('tr');
+      tr.dataset.taskId = t.id;
+
+      // Ref ID cell
+      const idCell = mkEl('td', 'id-cell');
+      idCell.textContent = t.id;
+      tr.append(idCell);
+
+      // Status cell
+      const statusCell = mkEl('td');
+      const badge = mkBadge(t.status);
+      statusCell.append(badge);
+      tr.append(statusCell);
+
+      // Source cell
+      tr.append(mkTxt('td', t.source_state || 'registry'));
+
+      // Updated age cell
+      const ageCell = mkEl('td', 'age-cell');
+      if (t.updated_at) {
+        const ms = new Date(t.updated_at).getTime();
+        ageCell.textContent = Number.isFinite(ms) ? fmtAge((Date.now() - ms) / 1000) + ' ago' : '—';
+        registerAge(ageCell, () => Number.isFinite(ms) ? fmtAge((Date.now() - ms) / 1000) + ' ago' : '—');
+      } else {
+        ageCell.textContent = '—';
+      }
+      tr.append(ageCell);
+
+      // Live activity cell
+      const liveCell = mkEl('td');
+      const spinnerEl = mkEl('span', 'spinner');
+      spinnerEl.setAttribute('role', 'img');
+      spinnerEl.setAttribute('aria-label', 'Live activity');
+      spinnerEl.hidden = true;
+      const liveTxt = mkTxt('span', '—');
+      const liveWrap = mkEl('span', 'live-indicator');
+      liveWrap.append(spinnerEl, liveTxt);
+      liveCell.append(liveWrap);
+      tr.append(liveCell);
+
+      // Outputs cell
+      const outCell = mkEl('td', 'outputs-cell');
+      outCell.textContent = orDash(t.output_count);
+      tr.append(outCell);
+
+      tbody.append(tr);
+
+      // Store for tick updates
+      taskRefs.set(t.id, { spinnerEl, liveTxt, statusBadge: badge, task: t });
+    }
+    tbl.append(tbody);
+    scroll.append(tbl);
+    details.append(scroll);
+    container.append(details);
+  }
+
+  setTxt('backlog-count', totalShown + ' of ' + (data.summary?.tasks_total ?? (data.tasks || []).length) + ' rows shown');
+}
+
+/* ── Summary pill update ── */
+function updatePills() {
+  const d = S.data;
+  const live = liveOk();
+  const snapshotPill = G('snapshot-pill');
+  const sourcePill = G('source-pill');
+
+  if (!d) {
+    snapshotPill.className = 'pill offline';
+    sourcePill.className = 'pill offline';
+    setTxt('snapshot-time', 'Unknown');
+    setTxt('source-time', 'Unknown');
+    return;
+  }
+  const now = Date.now();
+  const pubMs = d.published_at ? new Date(d.published_at).getTime() : null;
+  const srcMs = d.source_observed_at ? new Date(d.source_observed_at).getTime() : null;
+  const staleAfter = Math.min(Number(d.stale_after_seconds) || 300, 300) * 1000;
+  const pubStale = pubMs == null || (now - pubMs) > staleAfter;
+  const srcStale = srcMs == null || (now - srcMs) > staleAfter;
+  snapshotPill.className = 'pill' + (pubStale ? ' stale' : '');
+  sourcePill.className = 'pill' + (srcStale ? ' stale' : '');
+  setTxt('snapshot-time', pubMs ? fmtDate(d.published_at) : 'Unknown');
+  setTxt('source-time', srcMs ? fmtDate(d.source_observed_at) : 'Unknown');
+}
+
+/* ── Per-second tick ── */
+function tick() {
+  const now = Date.now();
+  const scrollLeft = W.scrollX || 0, scrollTop = W.scrollY || 0;
+  const live = liveOk();
+  const d = S.data;
+
+  // Update age spans
+  for (const ref of liveRefs) {
+    ref.el.textContent = ref.fn(now);
+  }
+
+  // Update pills
+  updatePills();
+
+  // Update freshness bar
+  const bar = G('freshness-bar');
+  if (!d) {
+    bar.textContent = S.fetchError ? 'Fetch error: ' + S.fetchError : 'Loading…';
+    return;
+  }
+  const pubMs = d.published_at ? new Date(d.published_at).getTime() : null;
+  const srcMs = d.source_observed_at ? new Date(d.source_observed_at).getTime() : null;
+  const pubAgeS = pubMs ? (now - pubMs) / 1000 : null;
+  const srcAgeS = srcMs ? (now - srcMs) / 1000 : null;
+  const staleAfterS = Math.min(Number(d.stale_after_seconds) || 300, 300);
+  const isStale = !live;
+  const fetchAgeS = S.lastFetch ? (now - S.lastFetch) / 1000 : null;
+
+  if (S.fetchError) {
+    bar.textContent = 'Fetch failed: ' + S.fetchError + '. Last snapshot: ' + fmtAge(pubAgeS) + ' ago.';
+  } else {
+    const parts = [];
+    if (pubAgeS !== null) parts.push('Published ' + fmtAge(pubAgeS) + ' ago');
+    if (srcAgeS !== null) parts.push('source observed ' + fmtAge(srcAgeS) + ' ago');
+    if (fetchAgeS !== null) parts.push('page refreshed ' + fmtAge(fetchAgeS) + ' ago');
+    const pubIntervalNote = d.publisher_interval_seconds
+      ? ' · Publisher interval ~' + Math.round(d.publisher_interval_seconds / 60) + 'min + Pages delay'
+      : '';
+    const suffix = isStale ? ' · Snapshot is stale — live signals paused.' : pubIntervalNote;
+    bar.textContent = (parts.join(' · ') || 'No timestamps') + suffix;
+  }
+
+  // Rows and overview share one freshly resolved view, even after a failed fetch.
+  const tasks = resolvedTasks(d);
+  const tasksById = new Map(tasks.map((t) => [t.id, t]));
+  const statusKey = JSON.stringify(tasks.map((t) => [t.id, t.status, t._live]));
+  if (statusKey !== overviewStatusKey) {
+    buildFilmProof(d, tasks);
+    buildWorkstreams(d, tasks);
+    overviewStatusKey = statusKey;
+  }
+  syncLegacyHarnessViews(d, tasks, live);
+
+  for (const [id, ref] of taskRefs) {
+    const t = tasksById.get(id);
+    const isLive = t._live;
+    ref.spinnerEl.hidden = !isLive;
+    ref.liveTxt.textContent = liveIndicatorText(t, now, live);
+    // Update status badge if liveness changed
+    const resolvedStatus = t.status;
+    if (ref.statusBadge.dataset.resolvedStatus !== resolvedStatus) {
+      ref.statusBadge.dataset.resolvedStatus = resolvedStatus;
+      ref.statusBadge.className = 'badge ' + statusCls(resolvedStatus);
+      // Rebuild badge content (dot + text)
+      ref.statusBadge.replaceChildren();
+      ref.statusBadge.append(mkEl('span', 'badge-dot'), document.createTextNode(resolvedStatus));
+    }
+  }
+  if ((W.scrollX || 0) !== scrollLeft || (W.scrollY || 0) !== scrollTop) {
+    W.scrollTo(scrollLeft, scrollTop);
+  }
+}
+
+/* ── Render (on new data) ── */
+function render(data) {
+  S.data = data;
+  S.lastFetch = Date.now();
+  liveRefs.length = 0;
+  overviewStatusKey = null;
+  buildProgressCards(data);
+  buildTimeline(data);
+  buildMilestones(data);
+  buildBacklog(data);
+  updatePills();
+  tick();
+}
+
+/* ── Fetch ── */
+let fetching = false;
+async function loadStatus() {
+  if (fetching) return;
+  fetching = true;
+  const btn = G('refresh-btn');
+  const spinner = mkEl('span', 'spinner');
+  spinner.setAttribute('aria-hidden', 'true');
+  btn.replaceChildren(spinner, document.createTextNode(' Refreshing'));
+  try {
+    const resp = await fetch('status.json?ts=' + Date.now(), { cache: 'no-store' });
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    const d = await resp.json();
+    if (d.schema !== 1) throw new Error('Unsupported schema version ' + d.schema);
+    S.fetchError = '';
+    S.lastFetch = Date.now();
+    S.data = d;
+    render(d);
+  } catch (err) {
+    S.fetchError = String(err && err.message ? err.message : err);
+    if (!S.data) {
+      G('task-groups').replaceChildren(
+        mkTxt('p', 'Could not load the public snapshot: ' + S.fetchError)
+      );
+    }
+    tick(); // immediately update freshness bar with error
+  } finally {
+    fetching = false;
+    btn.textContent = 'Refresh';
+  }
+}
+
+/* ── Event wiring ── */
+G('refresh-btn').addEventListener('click', loadStatus);
+
+G('search').addEventListener('input', (e) => {
+  S.filter = e.target.value;
+  if (S.data) buildBacklog(S.data);
+  tick();
+});
+
+G('status-filter').addEventListener('change', (e) => {
+  S.statusFilter = e.target.value;
+  if (S.data) buildBacklog(S.data);
+  tick();
+});
+
+if (W && typeof W.addEventListener === 'function') {
+  W.addEventListener('offline', () => { tick(); });
+}
+
+/* ── Init ── */
+loadStatus();
+setInterval(loadStatus, REFRESH_INTERVAL);
+// REQUIRED: re-evaluate ages and live states every second
+setInterval(tick, 1000);
+function updateFreshness() {
+  tick();
+}
+</script>
 </body>
 </html>
