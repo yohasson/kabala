@@ -1,0 +1,661 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>Film production status</title>
+  <script>
+    (() => {
+      const param = new URLSearchParams(window.location.search).get("scoutTheme");
+      const theme =
+        param || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+      document.documentElement.setAttribute("data-theme", theme);
+    })();
+  </script>
+  <style>
+    :root {
+      color-scheme: light;
+      --cp-bg: #f7f4ef;
+      --cp-bg-elevated: #fcfbf8;
+      --cp-surface: #ffffff;
+      --cp-surface-soft: #f5f5f5;
+      --cp-border: #dedede;
+      --cp-border-strong: #919191;
+      --cp-text: #242424;
+      --cp-text-muted: #5c5c5c;
+      --cp-text-soft: #6f6f6f;
+      --cp-accent: #b11f4b;
+      --cp-accent-hover: #9a1a41;
+      --cp-accent-soft: rgba(177, 31, 75, 0.08);
+      --cp-accent-fg: #ffffff;
+      --cp-success: #16a34a;
+      --cp-danger: #dc2626;
+      --cp-warning: #f59e0b;
+      --cp-link: #0078d4;
+      --cp-shadow: 0 18px 48px rgba(0, 0, 0, 0.12);
+      --cp-overlay: rgba(255, 255, 255, 0.8);
+      --cp-panel: rgba(255, 255, 255, 0.86);
+      --cp-panel-strong: rgba(255, 255, 255, 0.96);
+      --cp-sheen: rgba(255, 255, 255, 0.55);
+      --cp-highlight: rgba(177, 31, 75, 0.12);
+    }
+    html[data-theme="dark"] {
+      color-scheme: dark;
+      --cp-bg: #3d3b3a;
+      --cp-bg-elevated: #343231;
+      --cp-surface: #292929;
+      --cp-surface-soft: #2e2e2e;
+      --cp-border: #474747;
+      --cp-border-strong: #5f5f5f;
+      --cp-text: #dedede;
+      --cp-text-muted: #919191;
+      --cp-text-soft: #b0b0b0;
+      --cp-accent: #fd8ea1;
+      --cp-accent-hover: #fb7b91;
+      --cp-accent-soft: rgba(253, 142, 161, 0.14);
+      --cp-accent-fg: #1a1a1a;
+      --cp-success: #4ade80;
+      --cp-danger: #f87171;
+      --cp-warning: #fbbf24;
+      --cp-link: #4da6ff;
+      --cp-shadow: 0 18px 48px rgba(0, 0, 0, 0.32);
+      --cp-overlay: rgba(41, 41, 41, 0.88);
+      --cp-panel: rgba(41, 41, 41, 0.72);
+      --cp-panel-strong: rgba(41, 41, 41, 0.96);
+      --cp-sheen: rgba(255, 255, 255, 0.04);
+      --cp-highlight: rgba(253, 142, 161, 0.12);
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; }
+    body {
+      background: var(--cp-bg);
+      color: var(--cp-text);
+      font-family: "Segoe UI", Aptos, Calibri, -apple-system, BlinkMacSystemFont, sans-serif;
+      line-height: 1.5;
+    }
+    a { color: var(--cp-link); }
+    button, input, select {
+      font: inherit;
+      color: inherit;
+    }
+    button {
+      border: 1px solid var(--cp-border);
+      background: var(--cp-surface);
+      border-radius: 0.625rem;
+      padding: 0.65rem 0.9rem;
+      cursor: pointer;
+      box-shadow: 0 0 2px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.14);
+    }
+    button:hover { border-color: var(--cp-border-strong); }
+    .page {
+      width: min(1180px, calc(100% - 24px));
+      margin: 0 auto;
+      padding: 16px 0 32px;
+    }
+    .hero, .panel, .card {
+      background: var(--cp-surface);
+      border: 1px solid var(--cp-border);
+      border-radius: 16px;
+      box-shadow: 0 0 2px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.14);
+    }
+    .hero {
+      padding: 18px;
+      margin-bottom: 16px;
+    }
+    .hero-top {
+      display: flex;
+      gap: 12px;
+      justify-content: space-between;
+      align-items: flex-start;
+      flex-wrap: wrap;
+    }
+    .eyebrow {
+      color: var(--cp-text-muted);
+      font-size: 0.88rem;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+      margin: 0 0 4px;
+    }
+    h1 {
+      font-size: clamp(1.55rem, 3vw, 2.2rem);
+      line-height: 1.1;
+      margin: 0 0 8px;
+    }
+    .lede {
+      margin: 0;
+      color: var(--cp-text-muted);
+      max-width: 74ch;
+    }
+    .status-pill, .mini-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      border-radius: 999px;
+      border: 1px solid var(--cp-border);
+      padding: 0.35rem 0.7rem;
+      background: var(--cp-bg-elevated);
+      color: var(--cp-text-muted);
+      white-space: nowrap;
+    }
+    .status-pill strong, .mini-pill strong { color: var(--cp-text); }
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      justify-content: flex-end;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      gap: 12px;
+    }
+    .metric {
+      grid-column: span 3;
+      padding: 16px;
+    }
+    .metric .label { color: var(--cp-text-muted); font-size: 0.88rem; }
+    .metric .value { font-size: 1.6rem; font-weight: 650; margin: 2px 0 0; }
+    .metric .sub { color: var(--cp-text-soft); font-size: 0.88rem; margin-top: 4px; }
+    .panel {
+      padding: 16px;
+      margin-top: 12px;
+    }
+    .section-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .section-title h2 {
+      margin: 0;
+      font-size: 1.12rem;
+    }
+    .section-title .hint { color: var(--cp-text-muted); font-size: 0.92rem; }
+    .timeline {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+    }
+    .timeline .card { padding: 14px; }
+    .timeline .card .k { color: var(--cp-text-muted); font-size: 0.88rem; }
+    .timeline .card .v { font-size: 1.05rem; font-weight: 650; margin-top: 2px; }
+    .timeline .card .s { color: var(--cp-text-soft); font-size: 0.88rem; margin-top: 4px; }
+    .filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .filters input, .filters select {
+      min-width: 0;
+      border: 1px solid var(--cp-border);
+      border-radius: 0.625rem;
+      padding: 0.7rem 0.8rem;
+      background: var(--cp-surface);
+    }
+    .filters input { flex: 1 1 280px; }
+    .filters select { flex: 0 0 220px; }
+    .workstream-grid {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .workstream {
+      padding: 12px;
+      background: var(--cp-bg-elevated);
+      border-radius: 14px;
+      border: 1px solid var(--cp-border);
+    }
+    .workstream .name { font-weight: 650; }
+    .workstream .meta { color: var(--cp-text-muted); font-size: 0.88rem; margin-top: 2px; }
+    .bars { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px; margin-top: 10px; }
+    .bar { height: 8px; border-radius: 999px; background: var(--cp-surface-soft); overflow: hidden; }
+    .bar > span { display: block; height: 100%; border-radius: inherit; }
+    .bar.done > span { background: var(--cp-success); }
+    .bar.review > span { background: var(--cp-warning); }
+    .bar.blocked > span { background: var(--cp-danger); }
+    .bar.pending > span { background: var(--cp-text-soft); }
+    .bar.working > span { background: var(--cp-accent); }
+    details.task-group {
+      background: var(--cp-bg-elevated);
+      border: 1px solid var(--cp-border);
+      border-radius: 14px;
+      padding: 10px 12px;
+      margin-top: 10px;
+    }
+    details.task-group > summary {
+      cursor: pointer;
+      list-style: none;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      font-weight: 650;
+    }
+    details.task-group > summary::-webkit-details-marker { display: none; }
+    .summary-right { color: var(--cp-text-muted); font-weight: 500; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+    th, td {
+      text-align: left;
+      padding: 0.6rem 0.45rem;
+      border-top: 1px solid var(--cp-border);
+      vertical-align: top;
+    }
+    th {
+      color: var(--cp-text-muted);
+      font-size: 0.84rem;
+      font-weight: 600;
+    }
+    td code, .mono {
+      font-family: Consolas, "Courier New", Courier, monospace;
+      font-size: 0.93em;
+    }
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      border-radius: 999px;
+      padding: 0.22rem 0.55rem;
+      border: 1px solid var(--cp-border);
+      background: var(--cp-surface);
+      font-size: 0.85rem;
+      white-space: nowrap;
+    }
+    .tag.done { color: var(--cp-success); }
+    .tag.review { color: var(--cp-warning); }
+    .tag.blocked { color: var(--cp-danger); }
+    .tag.working { color: var(--cp-accent); }
+    .tag.pending, .tag.stale, .tag.unknown { color: var(--cp-text-muted); }
+    .footer-note {
+      color: var(--cp-text-muted);
+      font-size: 0.92rem;
+      margin-top: 10px;
+    }
+    .hidden { display: none !important; }
+    .busy {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .spinner {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      border: 2px solid var(--cp-border);
+      border-top-color: var(--cp-accent);
+      animation: spin 0.9s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @media (max-width: 980px) {
+      .metric { grid-column: span 6; }
+      .timeline { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .workstream-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 640px) {
+      .page { width: min(100% - 16px, 1180px); }
+      .hero { padding: 14px; }
+      .metric { grid-column: span 12; }
+      .timeline { grid-template-columns: 1fr; }
+      .workstream-grid { grid-template-columns: 1fr; }
+      .section-title { flex-direction: column; align-items: flex-start; }
+      .hero-actions { justify-content: flex-start; }
+      .filters input, .filters select { flex-basis: 100%; }
+      table { display: block; overflow-x: auto; white-space: nowrap; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section class="hero">
+      <div class="hero-top">
+        <div>
+          <p class="eyebrow">Public dashboard</p>
+          <h1>Film production status</h1>
+          <p class="lede">Status only; private deliverables are not published.</p>
+        </div>
+        <div class="hero-actions">
+          <span class="status-pill" id="snapshot-pill">Snapshot: <strong>loading</strong></span>
+          <span class="status-pill" id="source-pill">Source: <strong>loading</strong></span>
+          <button id="refresh-btn" type="button">Refresh</button>
+        </div>
+      </div>
+      <p class="footer-note" id="freshness-note">Awaiting the first safe snapshot…</p>
+    </section>
+
+    <section class="grid" id="metrics"></section>
+
+    <section class="panel">
+      <div class="section-title">
+        <h2>Snapshot timeline</h2>
+        <div class="hint">Published and observed timestamps are shown separately.</div>
+      </div>
+      <div class="timeline" id="timeline"></div>
+    </section>
+
+    <section class="panel">
+      <div class="section-title">
+        <h2>Workstream overview</h2>
+        <div class="hint">Main public rows grouped by status area.</div>
+      </div>
+      <div class="workstream-grid" id="workstreams"></div>
+    </section>
+
+    <section class="panel">
+      <div class="section-title">
+        <h2>Task rows</h2>
+        <div class="hint">Last reported status, not raw task notes or private deliverables.</div>
+      </div>
+      <div class="filters">
+        <input id="search" type="search" placeholder="Filter by ID, workstream, or status">
+        <select id="status-filter">
+          <option value="All">All statuses</option>
+          <option value="Done">Done</option>
+          <option value="Working">Working</option>
+          <option value="Review">Review</option>
+          <option value="Blocked">Blocked</option>
+          <option value="Stale">Stale</option>
+          <option value="Pending">Pending</option>
+          <option value="Needs correction">Needs correction</option>
+          <option value="Unknown">Unknown</option>
+        </select>
+      </div>
+      <div id="task-groups"></div>
+      <p class="footer-note">All rows come from sanitized local status data. No private text, file downloads, or source notes are published here.</p>
+    </section>
+  </main>
+
+  <script>
+    const state = { data: null, filter: "", statusFilter: "All", loading: false, fetchError: "" };
+    const staleAfter = 300000;
+    const refreshEvery = 60000;
+
+    const el = (id) => document.getElementById(id);
+    const metricsEl = el("metrics");
+    const timelineEl = el("timeline");
+    const workstreamsEl = el("workstreams");
+    const taskGroupsEl = el("task-groups");
+    const freshnessNote = el("freshness-note");
+    const snapshotPill = el("snapshot-pill");
+    const sourcePill = el("source-pill");
+    const refreshBtn = el("refresh-btn");
+    const search = el("search");
+    const statusFilter = el("status-filter");
+
+    function fmtDate(value) {
+      if (!value) return "Unknown";
+      const d = new Date(value);
+      return Number.isNaN(d.getTime()) ? "Unknown" : d.toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
+    }
+
+    function fmtAge(seconds) {
+      if (seconds == null || Number.isNaN(seconds)) return "Unknown";
+      const s = Math.max(0, Math.round(seconds));
+      const parts = [];
+      const units = [
+        ["d", 86400],
+        ["h", 3600],
+        ["m", 60],
+      ];
+      let rest = s;
+      for (const [label, size] of units) {
+        if (rest >= size) {
+          const n = Math.floor(rest / size);
+          parts.push(`${n}${label}`);
+          rest -= n * size;
+        }
+      }
+      if (!parts.length) parts.push(`${rest}s`);
+      return parts.join(" ");
+    }
+
+    function statusClass(status) {
+      return String(status || "unknown").toLowerCase().replace(/[^a-z]+/g, "-");
+    }
+
+    function countStatus(tasks, name) {
+      return tasks.filter((t) => t.status === name).length;
+    }
+
+    function liveSnapshot(data) {
+      const maxAge = Math.min(Number(data.stale_after_seconds) || 300, 300);
+      return !state.fetchError && [data.published_at, data.source_observed_at].every((value) => {
+        const age = value ? (Date.now() - Date.parse(value)) / 1000 : NaN;
+        return Number.isFinite(age) && age >= 0 && age <= maxAge;
+      });
+    }
+
+    function displayTasks(data) {
+      const live = liveSnapshot(data);
+      return (data.tasks || []).map((row) => {
+        const age = row.signal_updated_at ? (Date.now() - Date.parse(row.signal_updated_at)) / 1000 : NaN;
+        const active = live && row.live_eligible === true && row.signal_invalid === false
+          && row.historical !== true && ["running", "reviewing"].includes(row.signal_state)
+          && Number.isFinite(age) && age >= 0 && age <= 180;
+        return {...row, live_eligible: active,
+          status: row.status === "Working" && !active ? "Stale" : row.status};
+      });
+    }
+
+    function buildMetrics(data) {
+      const tasks = displayTasks(data);
+      const summary = data.summary || {};
+      const workingCount = liveSnapshot(data) ? countStatus(tasks, "Working") : "—";
+      const items = [
+        ["Tasks", summary.tasks_total ?? tasks.length, "Sanitized rows published"],
+        ["Done", countStatus(tasks, "Done"), "Registry-complete tasks"],
+        ["Working", workingCount, "Live / active rows"],
+        ["Review", countStatus(tasks, "Review"), "Needs review"],
+        ["Blocked", countStatus(tasks, "Blocked"), "Blocked rows"],
+        ["Needs correction", countStatus(tasks, "Needs correction"), "Change requested"],
+        ["Unknown", countStatus(tasks, "Unknown"), "No safe status"],
+        ["Outputs", summary.outputs_total ?? 0, "Published artifact rows"],
+      ];
+      metricsEl.innerHTML = items.map(([label, value, sub]) => `
+        <article class="metric">
+          <div class="label">${label}</div>
+          <div class="value">${value ?? "—"}</div>
+          <div class="sub">${sub}</div>
+        </article>`).join("");
+    }
+
+    function buildTimeline(data) {
+      // Static structure — age spans are updated every second by updateFreshness()
+      const regUpd = data.backlog?.registry_updated_at
+        ? fmtDate(new Date(data.backlog.registry_updated_at * 1000).toISOString())
+        : "Unknown";
+      timelineEl.innerHTML = `
+        <article class="card">
+          <div class="k">Snapshot published</div>
+          <div class="v">${fmtDate(data.published_at)}</div>
+          <div class="s" id="published-age"></div>
+        </article>
+        <article class="card">
+          <div class="k">Source observed</div>
+          <div class="v">${fmtDate(data.source_observed_at)}</div>
+          <div class="s" id="source-age"></div>
+        </article>
+        <article class="card">
+          <div class="k">Latest registry update</div>
+          <div class="v">${regUpd}</div>
+          <div class="s">Backlog rows: ${data.backlog?.total ?? "unknown"}</div>
+        </article>
+        <article class="card">
+          <div class="k">Fresh running</div>
+          <div class="v">${liveSnapshot(data) ? displayTasks(data).filter((row) => row.live_eligible && row.signal_state === "running").length : "—"}</div>
+          <div class="s">Valid signals: ${data.backlog?.valid_signals ?? 0}</div>
+        </article>`;
+    }
+
+    // REQUIRED3: re-evaluate ages every second; stale snapshot stops live counts
+    function updateFreshness() {
+      const data = state.data;
+      if (!data) return;
+      const now = Date.now();
+      const published = data.published_at ? new Date(data.published_at).getTime() : null;
+      const source = data.source_observed_at ? new Date(data.source_observed_at).getTime() : null;
+      const publishedAge = published == null ? null : (now - published) / 1000;
+      const sourceAge = source == null ? null : (now - source) / 1000;
+      const staleAfterS = data.stale_after_seconds || 300;
+      const stale = !liveSnapshot(data);
+
+      snapshotPill.innerHTML = `Snapshot: <strong>${published ? fmtDate(data.published_at) : "Unknown"}</strong>`;
+      sourcePill.innerHTML = `Source: <strong>${source ? fmtDate(data.source_observed_at) : "Unknown"}</strong>`;
+
+      // Invalidate every live surface before an offline early return.
+      buildMetrics(data);
+      buildTimeline(data);
+      buildWorkstreams(data);
+      renderTasks(data);
+      const publishedAgeEl = el("published-age");
+      const sourceAgeEl = el("source-age");
+      if (publishedAgeEl) publishedAgeEl.textContent = `${fmtAge(publishedAge)} ago`;
+      if (sourceAgeEl) sourceAgeEl.textContent = `${fmtAge(sourceAge)} ago`;
+      if (state.fetchError) {
+        freshnessNote.textContent = `Refresh failed: ${state.fetchError}. Last snapshot: ${fmtAge(publishedAge)} ago.`;
+        return;
+      }
+      freshnessNote.textContent = stale
+        ? `Stale snapshot: source older than ${Math.round(staleAfterS)}s. Published ${fmtAge(publishedAge)} ago; source observed ${fmtAge(sourceAge)} ago.`
+        : `Published ${fmtAge(publishedAge)} ago; source observed ${fmtAge(sourceAge)} ago. Refresh interval ${Math.round((data.refresh_interval_seconds || 60))}s, publisher interval ${Math.round((data.publisher_interval_seconds || 300))}s.`;
+
+    }
+
+    function buildWorkstreams(data) {
+      const groups = data.workstreams || [];
+      workstreamsEl.innerHTML = groups.map((g) => {
+        const total = g.total ?? 0;
+        const done = g.done ?? 0;
+        const review = g.review ?? 0;
+        const blocked = g.blocked ?? 0;
+        const working = displayTasks(data).filter((row) => row.workstream === g.name && row.status === "Working").length;
+        const pending = g.pending ?? 0;
+        const donePct = total ? (done / total) * 100 : 0;
+        const reviewPct = total ? (review / total) * 100 : 0;
+        const blockedPct = total ? (blocked / total) * 100 : 0;
+        const workingPct = total ? (working / total) * 100 : 0;
+        const pendingPct = total ? (pending / total) * 100 : 0;
+        return `
+          <div class="workstream">
+            <div class="name">${g.name}</div>
+            <div class="meta">${total} rows · ${done} done · ${working} working · ${review} review · ${blocked} blocked</div>
+            <div class="bars" aria-hidden="true">
+              <div class="bar done"><span style="width:${donePct}%"></span></div>
+              <div class="bar working"><span style="width:${workingPct}%"></span></div>
+              <div class="bar review"><span style="width:${reviewPct}%"></span></div>
+              <div class="bar blocked"><span style="width:${blockedPct}%"></span></div>
+              <div class="bar pending"><span style="width:${pendingPct}%"></span></div>
+            </div>
+          </div>`;
+      }).join("");
+    }
+
+    function filteredTasks(tasks) {
+      const q = state.filter.trim().toLowerCase();
+      return tasks.filter((t) => {
+        if (state.statusFilter !== "All" && t.status !== state.statusFilter) return false;
+        if (!q) return true;
+        return [t.id, t.workstream, t.status, t.source_state, t.historical ? "historical" : ""]
+          .some((value) => String(value || "").toLowerCase().includes(q));
+      });
+    }
+
+    function renderTasks(data) {
+      const openGroups = new Map([...taskGroupsEl.querySelectorAll(".task-group")]
+        .map((group) => [group.dataset.workstream, group.open]));
+      const grouped = new Map();
+      for (const row of filteredTasks(displayTasks(data))) {
+        if (!grouped.has(row.workstream)) grouped.set(row.workstream, []);
+        grouped.get(row.workstream).push(row);
+      }
+
+      const order = (data.workstreams || []).map((g) => g.name).filter((name) => grouped.has(name));
+      const html = order.map((name, index) => {
+        const rows = grouped.get(name);
+        return `
+          <details class="task-group" data-workstream="${name}"${(openGroups.get(name) ?? index === 0) ? " open" : ""}>
+            <summary>
+              <span>${name}</span>
+              <span class="summary-right">${rows.length} visible row${rows.length === 1 ? "" : "s"}</span>
+            </summary>
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Status</th>
+                  <th>Source</th>
+                  <th>Updated</th>
+                  <th>Live</th>
+                  <th>Outputs</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${rows.map((row) => `
+                  <tr>
+                    <td><code>${row.id}</code></td>
+                    <td><span class="tag ${statusClass(row.status)}">${row.status}</span></td>
+                    <td>${row.source_state || "registry"}</td>
+                    <td>${row.updated_at ? fmtAge((Date.now() - new Date(row.updated_at).getTime()) / 1000) + " ago" : "Unknown"}</td>
+                    <td>${row.live_eligible ? "Yes" : "No"}</td>
+                    <td>${row.output_count ?? 0}</td>
+                  </tr>`).join("")}
+              </tbody>
+            </table>
+          </details>`;
+      }).join("");
+      taskGroupsEl.innerHTML = html || '<p class="footer-note">No rows match the current filter.</p>';
+    }
+
+    function render(data) {
+      state.data = data;
+      updateFreshness();
+    }
+
+    async function loadStatus() {
+      state.loading = true;
+      refreshBtn.innerHTML = '<span class="busy"><span class="spinner"></span><span>Refreshing</span></span>';
+      try {
+        const url = `status.json?ts=${Date.now()}`;
+        const response = await fetch(url, { cache: "no-store" });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const data = await response.json();
+        if (data.schema !== 1) throw new Error("Unsupported schema");
+        state.fetchError = "";
+        render(data);
+      } catch (error) {
+        state.fetchError = String(error && error.message ? error.message : error);
+        if (!state.data) {
+          taskGroupsEl.innerHTML = `<p class="footer-note">Unable to load the local snapshot yet.</p>`;
+        }
+        // REQUIRED3: fetch failure stops spinner and live count immediately
+        updateFreshness();
+      } finally {
+        state.loading = false;
+        refreshBtn.textContent = "Refresh";
+      }
+    }
+
+    refreshBtn.addEventListener("click", loadStatus);
+    search.addEventListener("input", (event) => {
+      state.filter = event.target.value;
+      if (state.data) renderTasks(state.data);
+    });
+    statusFilter.addEventListener("change", (event) => {
+      state.statusFilter = event.target.value;
+      if (state.data) renderTasks(state.data);
+    });
+
+    loadStatus();
+    setInterval(loadStatus, refreshEvery);
+    // REQUIRED3: re-evaluate staleness and live counts every second
+    setInterval(updateFreshness, 1000);
+  </script>
+</body>
+</html>
